@@ -1,5 +1,5 @@
 {
-  "address": "0x48E78d2af55a975DDe6F095bD057DB48D7231B62",
+  "address": "0xDAeC95DA16c4b8e3c0eea15d9F6C819D88402D64",
   "abi": [
     {
       "inputs": [],
@@ -657,5 +657,5 @@
   ],
   "network": "igra",
   "chainId": 38833,
-  "deployedAt": "2026-04-10T11:28:50.447Z"
+  "deployedAt": "2026-04-10T11:32:17.445Z"
 }

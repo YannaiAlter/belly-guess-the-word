@@ -19,7 +19,7 @@ async function main() {
   // Write contract address + ABI to frontend so the UI can load it
   const artifactPath = path.join(
     __dirname,
-    "../artifacts/contracts/WordGuessing.sol/BellyJackpot.json"
+    "../artifacts/contracts/BellyJackpot.sol/BellyJackpot.json"
   );
   const artifact = JSON.parse(fs.readFileSync(artifactPath, "utf8"));
 
