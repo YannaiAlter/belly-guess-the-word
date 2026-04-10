@@ -1,7 +1,7 @@
 {
   "name": "belly",
   "version": "1.1.0",
-  "description": "Belly — on-chain word game on IGRA Network (Kaspa EVM L2)",
+  "description": "Belly Jackpot — timed on-chain jackpot game on IGRA Network (Kaspa EVM L2)",
   "scripts": {
     "node": "hardhat node",
     "compile": "hardhat compile",

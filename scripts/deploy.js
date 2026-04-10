@@ -6,7 +6,7 @@ const path = require("path");
 async function main() {
   const [owner] = await ethers.getSigners();
 
-  console.log("Deploying Belly game contract with account:", owner.address);
+  console.log("Deploying Belly jackpot contract with account:", owner.address);
   console.log("Account balance:", ethers.formatEther(await ethers.provider.getBalance(owner.address)), "ETH\n");
 
   const WordGuessing = await ethers.getContractFactory("WordGuessing");
@@ -14,7 +14,7 @@ async function main() {
   await contract.waitForDeployment();
 
   const address = await contract.getAddress();
-  console.log("Belly contract deployed to:", address);
+  console.log("Belly jackpot contract deployed to:", address);
 
   // Write contract address + ABI to frontend so the UI can load it
   const artifactPath = path.join(
@@ -61,7 +61,7 @@ async function main() {
       console.log(`  [${i}] ${signers[i].address}  (${bal} ETH)`);
       console.log(`      Private key: ${hardhatAccounts[i]}`);
     }
-    console.log("\nAccount [0] is the contract owner.");
+    console.log("\nAccount [0] is the jackpot owner.");
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
     console.log("Next: npm run serve  →  open http://localhost:3000");
   } else {

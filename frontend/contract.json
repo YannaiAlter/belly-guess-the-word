@@ -1,5 +1,5 @@
 {
-  "address": "0xf1aC6c75C5157cc525cD16A8bC2828b4aa1C766B",
+  "address": "0xB0573EE882704085bC65FA9E2C14795f29e17ea0",
   "abi": [
     {
       "inputs": [],
@@ -10,25 +10,38 @@
       "anonymous": false,
       "inputs": [
         {
-          "indexed": true,
-          "internalType": "address",
-          "name": "owner",
-          "type": "address"
-        },
-        {
           "indexed": false,
           "internalType": "uint256",
-          "name": "reclaimedAmount",
+          "name": "oldFee",
           "type": "uint256"
         },
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "timestamp",
+          "name": "newFee",
           "type": "uint256"
         }
       ],
-      "name": "GameReset",
+      "name": "EntryFeeUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint16",
+          "name": "oldFeeBps",
+          "type": "uint16"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint16",
+          "name": "newFeeBps",
+          "type": "uint16"
+        }
+      ],
+      "name": "FeeBpsUpdated",
       "type": "event"
     },
     {
@@ -36,29 +49,10 @@
       "inputs": [
         {
           "indexed": true,
-          "internalType": "bytes32",
-          "name": "wordHash",
-          "type": "bytes32"
-        },
-        {
-          "indexed": false,
-          "internalType": "string",
-          "name": "hint",
-          "type": "string"
-        },
-        {
-          "indexed": false,
           "internalType": "uint256",
-          "name": "timestamp",
+          "name": "roundId",
           "type": "uint256"
-        }
-      ],
-      "name": "GameStarted",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
+        },
         {
           "indexed": true,
           "internalType": "address",
@@ -68,23 +62,42 @@
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "totalGuesses",
+          "name": "ticketNumber",
           "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "bool",
-          "name": "correct",
-          "type": "bool"
         },
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "timestamp",
+          "name": "participantIndex",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "potBalance",
           "type": "uint256"
         }
       ],
-      "name": "GuessSubmitted",
+      "name": "ParticipantJoined",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "oldDuration",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "newDuration",
+          "type": "uint256"
+        }
+      ],
+      "name": "RoundDurationUpdated",
       "type": "event"
     },
     {
@@ -92,9 +105,27 @@
       "inputs": [
         {
           "indexed": true,
+          "internalType": "uint256",
+          "name": "roundId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
           "internalType": "address",
           "name": "winner",
           "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "winnerTicket",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "winnerIndex",
+          "type": "uint256"
         },
         {
           "indexed": false,
@@ -109,12 +140,66 @@
           "type": "uint256"
         }
       ],
-      "name": "WinnerDeclared",
+      "name": "RoundFinalized",
       "type": "event"
     },
     {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "roundId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "startedAt",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "endsAt",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "entryFeeWei",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "roundDuration",
+          "type": "uint256"
+        }
+      ],
+      "name": "RoundStarted",
+      "type": "event"
+    },
+    {
+      "stateMutability": "payable",
+      "type": "fallback"
+    },
+    {
       "inputs": [],
-      "name": "COOLDOWN",
+      "name": "MAX_FEE_BPS",
+      "outputs": [
+        {
+          "internalType": "uint16",
+          "name": "",
+          "type": "uint16"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "MIN_DURATION",
       "outputs": [
         {
           "internalType": "uint256",
@@ -127,7 +212,7 @@
     },
     {
       "inputs": [],
-      "name": "GAME_TIMEOUT",
+      "name": "entryFeeWei",
       "outputs": [
         {
           "internalType": "uint256",
@@ -140,12 +225,12 @@
     },
     {
       "inputs": [],
-      "name": "GUESS_PRICE",
+      "name": "feeBps",
       "outputs": [
         {
-          "internalType": "uint256",
+          "internalType": "uint16",
           "name": "",
-          "type": "uint256"
+          "type": "uint16"
         }
       ],
       "stateMutability": "view",
@@ -153,7 +238,27 @@
     },
     {
       "inputs": [],
-      "name": "MAX_GUESSES_PER_ADDRESS",
+      "name": "finalizeJackpot",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "finalized",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "finalizedAt",
       "outputs": [
         {
           "internalType": "uint256",
@@ -167,25 +272,49 @@
     {
       "inputs": [
         {
-          "internalType": "string",
-          "name": "word",
-          "type": "string"
+          "internalType": "uint256",
+          "name": "queryRoundId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "player",
+          "type": "address"
         }
       ],
-      "name": "computeHash",
+      "name": "getMyTicket",
       "outputs": [
         {
-          "internalType": "bytes32",
+          "internalType": "uint256",
           "name": "",
-          "type": "bytes32"
+          "type": "uint256"
         }
       ],
-      "stateMutability": "pure",
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "index",
+          "type": "uint256"
+        }
+      ],
+      "name": "getParticipantAt",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
       "type": "function"
     },
     {
       "inputs": [],
-      "name": "gameStartedAt",
+      "name": "getParticipantsCount",
       "outputs": [
         {
           "internalType": "uint256",
@@ -198,26 +327,46 @@
     },
     {
       "inputs": [],
-      "name": "getGameState",
+      "name": "getRoundState",
       "outputs": [
         {
+          "internalType": "uint256",
+          "name": "_roundId",
+          "type": "uint256"
+        },
+        {
           "internalType": "bool",
-          "name": "_isActive",
+          "name": "_isRoundActive",
           "type": "bool"
         },
         {
-          "internalType": "bytes32",
-          "name": "_wordHash",
-          "type": "bytes32"
+          "internalType": "uint256",
+          "name": "_roundEndsAt",
+          "type": "uint256"
         },
         {
-          "internalType": "string",
-          "name": "_hint",
-          "type": "string"
+          "internalType": "uint256",
+          "name": "_entryFeeWei",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_roundDuration",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint16",
+          "name": "_feeBps",
+          "type": "uint16"
         },
         {
           "internalType": "uint256",
           "name": "_potBalance",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_participantCount",
           "type": "uint256"
         },
         {
@@ -227,13 +376,13 @@
         },
         {
           "internalType": "uint256",
-          "name": "_guessesCount",
+          "name": "_winnerTicket",
           "type": "uint256"
         },
         {
-          "internalType": "uint256",
-          "name": "_gameStartedAt",
-          "type": "uint256"
+          "internalType": "bool",
+          "name": "_finalized",
+          "type": "bool"
         },
         {
           "internalType": "uint256",
@@ -246,65 +395,7 @@
     },
     {
       "inputs": [],
-      "name": "getPot",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "guessesCount",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "name": "guessesPerAddress",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "hint",
-      "outputs": [
-        {
-          "internalType": "string",
-          "name": "",
-          "type": "string"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "isActive",
+      "name": "isRoundActive",
       "outputs": [
         {
           "internalType": "bool",
@@ -316,19 +407,31 @@
       "type": "function"
     },
     {
+      "inputs": [],
+      "name": "joinJackpot",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
       "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
         {
           "internalType": "address",
           "name": "",
           "type": "address"
         }
       ],
-      "name": "lastGuessTimestamp",
+      "name": "joinedInRound",
       "outputs": [
         {
-          "internalType": "uint256",
+          "internalType": "bool",
           "name": "",
-          "type": "uint256"
+          "type": "bool"
         }
       ],
       "stateMutability": "view",
@@ -349,6 +452,19 @@
     },
     {
       "inputs": [],
+      "name": "participantCount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
       "name": "potBalance",
       "outputs": [
         {
@@ -362,7 +478,65 @@
     },
     {
       "inputs": [],
-      "name": "resetTimedOutGame",
+      "name": "roundDuration",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "roundEndsAt",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "roundId",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "roundStartedAt",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "newEntryFeeWei",
+          "type": "uint256"
+        }
+      ],
+      "name": "setEntryFee",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -370,32 +544,71 @@
     {
       "inputs": [
         {
-          "internalType": "bytes32",
-          "name": "_wordHash",
-          "type": "bytes32"
+          "internalType": "uint16",
+          "name": "newFeeBps",
+          "type": "uint16"
+        }
+      ],
+      "name": "setFeeBps",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "newRoundDuration",
+          "type": "uint256"
+        }
+      ],
+      "name": "setRoundDuration",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "startNewRound",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
         },
         {
-          "internalType": "string",
-          "name": "_hint",
-          "type": "string"
+          "internalType": "address",
+          "name": "",
+          "type": "address"
         }
       ],
-      "name": "startGame",
-      "outputs": [],
-      "stateMutability": "nonpayable",
+      "name": "ticketNumberByPlayer",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
       "type": "function"
     },
     {
-      "inputs": [
+      "inputs": [],
+      "name": "timeRemaining",
+      "outputs": [
         {
-          "internalType": "string",
-          "name": "guess",
-          "type": "string"
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
         }
       ],
-      "name": "submitGuess",
-      "outputs": [],
-      "stateMutability": "payable",
+      "stateMutability": "view",
       "type": "function"
     },
     {
@@ -413,19 +626,36 @@
     },
     {
       "inputs": [],
-      "name": "wordHash",
+      "name": "winnerIndex",
       "outputs": [
         {
-          "internalType": "bytes32",
+          "internalType": "uint256",
           "name": "",
-          "type": "bytes32"
+          "type": "uint256"
         }
       ],
       "stateMutability": "view",
       "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "winnerTicket",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "stateMutability": "payable",
+      "type": "receive"
     }
   ],
   "network": "igra",
   "chainId": 38833,
-  "deployedAt": "2026-04-10T09:31:51.364Z"
+  "deployedAt": "2026-04-10T10:34:26.896Z"
 }
