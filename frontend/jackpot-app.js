@@ -9,6 +9,17 @@ let firstDataLoadDone = false;
 const byId = (id) => document.getElementById(id);
 const setText = (id, v) => { const el = byId(id); if (el) el.textContent = v; };
 const short = (a) => (!a ? '--' : `${a.slice(0,6)}...${a.slice(-4)}`);
+function withTimeout(promise, ms, label) {
+  let timer = null;
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error(`${label} timeout`)), ms);
+    }),
+  ]).finally(() => {
+    if (timer) clearTimeout(timer);
+  });
+}
 function setAppLoader(visible, message = "Loading jackpot data...") {
   const loader = byId("app-loader");
   const text = byId("app-loader-text");
@@ -152,7 +163,7 @@ async function loadReadContract(){
     try {
       const candidateProvider = new ethers.JsonRpcProvider(rpcUrl);
       const candidateContract = new ethers.Contract(info.address, info.abi, candidateProvider);
-      await candidateContract.getRoundState();
+      await withTimeout(candidateContract.getRoundState(), 7000, `rpc read ${rpcUrl}`);
       readProvider = candidateProvider;
       readContract = candidateContract;
       setText("data-source", rpcUrl.replace("https://", "").replace("http://", ""));
@@ -167,7 +178,7 @@ async function loadReadContract(){
     try {
       const browserProvider = new ethers.BrowserProvider(window.ethereum);
       const candidateContract = new ethers.Contract(info.address, info.abi, browserProvider);
-      await candidateContract.getRoundState();
+      await withTimeout(candidateContract.getRoundState(), 7000, "wallet read");
       readProvider = browserProvider;
       readContract = candidateContract;
       setText("data-source", "Wallet RPC");
