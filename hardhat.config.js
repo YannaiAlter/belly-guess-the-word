@@ -30,6 +30,22 @@ module.exports = {
     },
   },
 
+  etherscan: {
+    apiKey: {
+      igra: process.env.IGRA_EXPLORER_API_KEY || "abc",
+    },
+    customChains: [
+      {
+        network: "igra",
+        chainId: 38833,
+        urls: {
+          apiURL: "https://explorer.igralabs.com/api",
+          browserURL: "https://explorer.igralabs.com",
+        },
+      },
+    ],
+  },
+
   // Gas reporter (optional — npm install --save-dev hardhat-gas-reporter)
   gasReporter: {
     enabled: process.env.REPORT_GAS === "true",

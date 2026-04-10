@@ -53,6 +53,38 @@
     .wallet-icon-btn:hover { transform: translateY(-1px); }
     .wallet-icon-img { width:42px; height:42px; border-radius:8px; object-fit:cover; }
     .wallet-icon-label { font-size:12px; color:var(--muted); line-height:1; }
+    .how-link-btn {
+      border:1px solid var(--border);
+      background:var(--surface2);
+      color:var(--text);
+      border-radius:999px;
+      padding:8px 12px;
+      font-size:12px;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+    .how-grid {
+      display:grid;
+      gap:10px;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    }
+    .how-step {
+      background:var(--surface2);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:10px;
+      text-align:left;
+    }
+    .how-step-num {
+      width:22px; height:22px; border-radius:50%;
+      display:inline-flex; align-items:center; justify-content:center;
+      background:var(--accent); color:#fff; font-size:12px; font-weight:700;
+      margin-bottom:6px;
+    }
+    .how-step-title { font-weight:700; font-size:13px; margin-bottom:4px; }
+    .how-step-text { color:var(--muted); font-size:12px; line-height:1.5; }
     .loader-overlay {
       display: flex; align-items: center; justify-content: center;
       flex-direction: column; gap: 12px;
@@ -82,13 +114,13 @@
         <button id="btn-logout-top" onclick="logoutWallet()">Disconnect</button>
       </div>
     </div>
-
     <div class="card hero">
       <div class="title">Time Remaining</div>
       <div class="timer" id="time-remaining">--</div>
       <div class="title" style="margin-top:14px;">Current Jackpot</div>
       <div class="amount" id="jackpot-hero-amount">0.00 iKAS</div>
       <div class="sub">Live pot updates every 5 seconds and after each transaction.</div>
+      <div class="sub" style="font-size:12px;">Entry Fee: <b id="entry-fee">--</b></div>
       <div class="title" style="margin-top:16px;">Want to join?</div>
       <div id="wallet-auth-icons" class="wallet-icons" style="margin-top:10px;">
         <button class="wallet-icon-btn" title="Kasware" onclick="connectWallet('kasware')">
@@ -114,38 +146,48 @@
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" id="how-it-works">
       <h2 class="section-title">How It Works</h2>
-      <div style="color:var(--muted); font-size:14px; line-height:1.6;">
-        <p style="margin:6px 0;"><strong>1) Join:</strong> Connect your wallet and click <em>Join To Jackpot</em>. You pay the entry fee and receive one random ticket number.</p>
-        <p style="margin:6px 0;"><strong>2) Wait:</strong> The jackpot stays open until the timer reaches zero. Anyone can watch the pot, participants, and tickets live.</p>
-        <p style="margin:6px 0;"><strong>3) Finalize:</strong> When time is over, the jackpot is finalized and one winner is selected from all participants.</p>
-        <p style="margin:6px 0;"><strong>4) Payout:</strong> The winner receives the jackpot payout automatically, and the owner fee is sent according to the contract rules.</p>
+      <div class="how-grid">
+        <div class="how-step">
+          <span class="how-step-num">1</span>
+          <div class="how-step-title">Join</div>
+          <div class="how-step-text">Connect wallet and click <em>Join To Jackpot</em>. You pay the entry fee and get one random ticket.</div>
+        </div>
+        <div class="how-step">
+          <span class="how-step-num">2</span>
+          <div class="how-step-title">Wait</div>
+          <div class="how-step-text">The jackpot stays open while the timer runs. Pot and participants update live on the page.</div>
+        </div>
+        <div class="how-step">
+          <span class="how-step-num">3</span>
+          <div class="how-step-title">Finalize</div>
+          <div class="how-step-text">When time reaches zero, jackpot finalization picks one winner from all participants.</div>
+        </div>
+        <div class="how-step">
+          <span class="how-step-num">4</span>
+          <div class="how-step-title">Payout</div>
+          <div class="how-step-text">Winner payout and owner fee are distributed by the contract automatically based on contract rules.</div>
+        </div>
       </div>
       <div class="row" style="margin-top:10px;">
-        <span class="pill">Smart Contract</span>
+        <span class="pill">Contract Verified</span>
         <a href="https://explorer.igralabs.com/address/0xB0573EE882704085bC65FA9E2C14795f29e17ea0" target="_blank" rel="noreferrer" style="color:var(--accent); text-decoration:none;">
-          View on IGRA Explorer
+          View verified source on IGRA Explorer
         </a>
       </div>
     </div>
 
-    <div class="card user-zone">
-      <h2 class="section-title">Jackpot Round Data</h2>
-      <div class="row" style="margin-bottom:10px;">
-        <span class="pill">Data Source: <b id="data-source">Loading...</b></span>
-        <span class="pill">Round: <b id="round-id">--</b></span>
-        <span class="pill">Status: <b id="round-status">--</b></span>
-        <span id="role-pill" class="pill user">Regular User</span>
-      </div>
-      <div class="grid">
-        <div class="stat"><div class="label">Entry Fee</div><div class="value" id="entry-fee">--</div></div>
-        <div class="stat"><div class="label">Participants</div><div class="value" id="participant-count">--</div></div>
-        <div class="stat"><div class="label">Winner</div><div class="value" id="winner-addr">--</div></div>
-        <div class="stat"><div class="label">Winner Ticket</div><div class="value" id="winner-ticket">--</div></div>
-        <div class="stat"><div class="label">Owner Fee (bps)</div><div class="value" id="fee-bps">--</div></div>
-      </div>
-      <div style="margin-top:10px; color:var(--muted);">Your ticket: <b id="my-ticket">Not joined</b></div>
+    <div class="row" style="margin-bottom:10px;">
+      <span class="pill">Data Source: <b id="data-source">Loading...</b></span>
+      <span class="pill">Round: <b id="round-id">--</b></span>
+      <span class="pill">Status: <b id="round-status">--</b></span>
+      <span id="role-pill" class="pill user">Regular User</span>
+      <span class="pill">Participants: <b id="participant-count">--</b></span>
+      <span class="pill">Winner: <b id="winner-addr">--</b></span>
+      <span class="pill">Ticket: <b id="winner-ticket">--</b></span>
+      <span class="pill">Fee (bps): <b id="fee-bps">--</b></span>
+      <span class="pill">My Ticket: <b id="my-ticket">Not joined</b></span>
     </div>
 
     <div class="card">
