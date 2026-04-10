@@ -679,6 +679,8 @@
 
     /* ── Dashboard (landing page) ────────────── */
     .dashboard { margin-bottom: 36px; }
+    .dashboard-shell { position: relative; }
+    .dashboard-content.loading { display: none; }
 
     /* Live game card */
     .dash-live {
@@ -783,6 +785,7 @@
       display: flex; align-items: center; justify-content: center;
       gap: 8px; padding: 18px 0; color: var(--muted); font-size: 13px;
     }
+    .dash-loading.hidden { display: none; }
     .dash-spin {
       width: 14px; height: 14px;
       border: 2px solid var(--border); border-top-color: var(--muted);
@@ -859,6 +862,57 @@
     <p class="hero-sub">Feed your intuition, crack the secret word, and claim the prize pool on IGRA Network.</p>
     <p class="hero-cta">Connect a wallet below to start playing.</p>
 
+    <div class="dashboard" id="landing-dashboard">
+      <div class="dashboard-shell">
+      <div class="dash-loading" id="landing-dashboard-loader">
+        <span class="dash-spin"></span>
+        <span id="landing-dashboard-loader-text">Loading live dashboard...</span>
+      </div>
+      <div class="dashboard-content loading" id="landing-dashboard-content">
+      <div class="dash-live" id="dash-live">
+        <div class="dl-header">
+          <div class="dl-status" id="dash-status"><span class="dl-dot"></span> loading game status</div>
+          <div class="dl-timer" id="dash-timer">--</div>
+        </div>
+        <div class="dl-pot" id="dash-pot">--</div>
+        <div class="dl-pot-label">Current Prize Pool</div>
+        <div class="dl-hint" id="dash-hint">Connect a wallet to start playing.</div>
+        <div class="dl-footer">
+          <span id="dash-active-count">Active Games: --</span>
+          <a href="#panels" onclick="focusCurrentGameFromLanding(event)" style="color:var(--accent); text-decoration:none;">View Current Game →</a>
+        </div>
+      </div>
+
+      <div class="dash-grid">
+        <div class="dash-card">
+          <div class="dash-card-title">Current Round</div>
+          <div class="stat-line"><span class="sl-lbl">Status</span><span class="sl-val" id="dash-round-status">--</span></div>
+          <div class="stat-line"><span class="sl-lbl">Total Guesses</span><span class="sl-val" id="dash-round-guesses">--</span></div>
+          <div class="stat-line"><span class="sl-lbl">Time Remaining</span><span class="sl-val" id="dash-round-time">--</span></div>
+        </div>
+
+        <div class="dash-card">
+          <div class="dash-card-title">Last Winner</div>
+          <div id="dash-last-winner-empty" class="dash-empty">
+            <div class="de-ico">🏆</div>
+            No winner yet
+          </div>
+          <div id="dash-last-winner" style="display:none;">
+            <div class="winner-row">
+              <span class="w-rank">#1</span>
+              <span class="w-addr" id="dash-winner-addr">--</span>
+              <span class="w-amt" id="dash-winner-amt">--</span>
+            </div>
+            <div class="winner-row">
+              <span class="w-time" id="dash-winner-time">--</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+      </div>
+    </div>
+
     <div class="wallet-options">
       <!-- KasWare -->
       <div class="wallet-card kasware" id="card-kasware" onclick="connectWallet('kasware')">
@@ -877,7 +931,7 @@
       </div>
 
       <!-- Dev Mode -->
-      <div class="wallet-card devmode" onclick="showDevModal()">
+      <div class="wallet-card devmode" id="card-devmode" onclick="showDevModal()">
         <div style="font-size:40px; margin-bottom:8px; line-height:1.1;">🔧</div>
         <div class="wc-name">Dev Mode</div>
         <div class="wc-sub">Hardhat accounts</div>
@@ -894,7 +948,7 @@
         <div class="step-lbl">Serve the frontend</div>
         <code>npm run serve</code>
         <div style="font-size:12px; color:var(--text2); margin-top:10px;">
-          Open <strong>http://localhost:3000</strong> and select Dev Mode to connect.
+          Open <strong>http://localhost:3000</strong> and connect your wallet.
         </div>
       </div>
     </details>
@@ -1079,7 +1133,7 @@
       <div class="htp-num">1</div>
       <div class="htp-body">
         <h4>Connect your wallet</h4>
-        <p>Use KasWare (recommended for IGRA Network) or MetaMask. For local testing, use Dev Mode.</p>
+        <p>Use KasWare (recommended for IGRA Network) or MetaMask to join the game.</p>
       </div>
     </div>
     <div class="htp-step">

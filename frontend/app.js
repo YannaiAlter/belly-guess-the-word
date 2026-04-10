@@ -27,6 +27,9 @@ let activityTimer     = null;
 let activities       = [];   // [{icon, msg, time, type}]
 let sessionGuesses   = [];   // [{word, correct}]
 let activityOpen     = true;
+const IS_LOCAL_DEV   = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+let landingInterval  = null;
+let landingLoadedOnce = false;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Toast Notifications
@@ -181,9 +184,20 @@ window.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  // Hide dev-only entry points in production.
+  if (!IS_LOCAL_DEV) {
+    const devCard = document.getElementById('card-devmode');
+    const devModal = document.getElementById('dev-modal');
+    if (devCard) devCard.style.display = 'none';
+    if (devModal) devModal.style.display = 'none';
+  }
+
   // Detect wallets and update cards
   const detected = detectWallets();
   updateWalletCards(detected);
+  await loadLandingDashboard();
+  clearInterval(landingInterval);
+  landingInterval = setInterval(loadLandingDashboard, 15000);
 
   // Attach wallet event listeners
   const kwp = getKasWareProvider();
@@ -203,6 +217,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // Auto-reconnect from session
   const saved = sessionStorage.getItem('walletType');
   if (saved === 'dev') {
+    if (!IS_LOCAL_DEV) return;
     const pk = sessionStorage.getItem('devPK');
     if (pk) connectDev(pk);
   } else if (saved) {
@@ -318,6 +333,7 @@ function disconnect() {
   clearInterval(refreshInterval);
   clearInterval(cooldownInterval);
   clearInterval(activityTimer);
+  clearInterval(landingInterval);
   sessionStorage.removeItem('walletType');
   sessionStorage.removeItem('devPK');
 
@@ -342,6 +358,8 @@ function disconnect() {
   if (discBtn)    discBtn.style.display = 'none';
 
   toast('Disconnected', 'info');
+  loadLandingDashboard();
+  landingInterval = setInterval(loadLandingDashboard, 15000);
 }
 
 async function connectDev(privateKey) {
@@ -722,6 +740,126 @@ function showPanels() {
   const pn = document.getElementById('panels');
   if (nc) nc.style.display = 'none';
   if (pn) pn.style.display = 'block';
+}
+
+async function loadLandingDashboard() {
+  if (!contractInfo?.address || !contractInfo?.abi) return;
+  if (!landingLoadedOnce) {
+    setLandingDashboardLoading(true, 'Loading live dashboard...');
+  }
+
+  const statusEl = document.getElementById('dash-status');
+  const timerEl = document.getElementById('dash-timer');
+  const potEl = document.getElementById('dash-pot');
+  const hintEl = document.getElementById('dash-hint');
+  const activeCountEl = document.getElementById('dash-active-count');
+  const roundStatusEl = document.getElementById('dash-round-status');
+  const roundGuessesEl = document.getElementById('dash-round-guesses');
+  const roundTimeEl = document.getElementById('dash-round-time');
+  const dashLiveEl = document.getElementById('dash-live');
+
+  let readProvider = null;
+  const rawProvider = getKasWareProvider() || getMetaMaskProvider();
+  if (rawProvider) {
+    readProvider = new ethers.BrowserProvider(rawProvider);
+  } else if (Number(contractInfo.chainId) === 31337 && IS_LOCAL_DEV) {
+    readProvider = new ethers.JsonRpcProvider('http://127.0.0.1:8545');
+  }
+
+  if (!readProvider) {
+    if (statusEl) statusEl.innerHTML = '<span class="dl-dot"></span> wallet not connected';
+    if (timerEl) timerEl.textContent = '--';
+    if (potEl) potEl.textContent = '--';
+    if (hintEl) hintEl.textContent = 'Connect KasWare or MetaMask to load live game data.';
+    if (activeCountEl) activeCountEl.textContent = 'Active Games: --';
+    if (roundStatusEl) roundStatusEl.textContent = '--';
+    if (roundGuessesEl) roundGuessesEl.textContent = '--';
+    if (roundTimeEl) roundTimeEl.textContent = '--';
+    setLandingDashboardLoading(false);
+    landingLoadedOnce = true;
+    return;
+  }
+
+  try {
+    const readContract = new ethers.Contract(contractInfo.address, contractInfo.abi, readProvider);
+    const [isActive, , hint, potBalance, winner, guessesCount, , timeRemaining] = await readContract.getGameState();
+    const hasWinner = winner !== ethers.ZeroAddress;
+    const activeGames = isActive ? 1 : 0;
+
+    if (statusEl) {
+      statusEl.innerHTML = `<span class="dl-dot"></span>${isActive ? 'live game active' : hasWinner ? 'round complete' : 'waiting for next round'}`;
+      statusEl.classList.toggle('live', !!isActive);
+    }
+    if (dashLiveEl) dashLiveEl.classList.toggle('active', !!isActive);
+    if (timerEl) timerEl.textContent = isActive ? formatTime(Number(timeRemaining)) : '--';
+    if (potEl) potEl.textContent = `${ethers.formatEther(potBalance)} iKAS`;
+    if (hintEl) hintEl.textContent = hint || (isActive ? 'No hint provided yet.' : 'No active round right now.');
+    if (activeCountEl) activeCountEl.textContent = `Active Games: ${activeGames}`;
+    if (roundStatusEl) roundStatusEl.textContent = isActive ? 'Active' : hasWinner ? 'Ended' : 'Idle';
+    if (roundGuessesEl) roundGuessesEl.textContent = guessesCount.toString();
+    if (roundTimeEl) roundTimeEl.textContent = isActive ? formatTime(Number(timeRemaining)) : '--';
+
+    await loadLastWinner(readContract, readProvider);
+  } catch {
+    if (statusEl) statusEl.innerHTML = '<span class="dl-dot"></span> unable to load game data';
+    if (timerEl) timerEl.textContent = '--';
+    if (potEl) potEl.textContent = '--';
+  } finally {
+    setLandingDashboardLoading(false);
+    landingLoadedOnce = true;
+  }
+}
+
+function setLandingDashboardLoading(isLoading, message = 'Loading live dashboard...') {
+  const loader = document.getElementById('landing-dashboard-loader');
+  const loaderText = document.getElementById('landing-dashboard-loader-text');
+  const content = document.getElementById('landing-dashboard-content');
+  if (loaderText) loaderText.textContent = message;
+  if (loader) loader.classList.toggle('hidden', !isLoading);
+  if (content) content.classList.toggle('loading', isLoading);
+}
+
+async function loadLastWinner(readContract, readProvider) {
+  const winnerWrap = document.getElementById('dash-last-winner');
+  const winnerEmpty = document.getElementById('dash-last-winner-empty');
+  const winnerAddr = document.getElementById('dash-winner-addr');
+  const winnerAmt = document.getElementById('dash-winner-amt');
+  const winnerTime = document.getElementById('dash-winner-time');
+
+  try {
+    const latestBlock = await readProvider.getBlockNumber();
+    const fromBlock = Math.max(0, latestBlock - 50000);
+    const logs = await readContract.queryFilter(readContract.filters.WinnerDeclared(), fromBlock, latestBlock);
+    if (!logs.length) {
+      if (winnerWrap) winnerWrap.style.display = 'none';
+      if (winnerEmpty) winnerEmpty.style.display = 'block';
+      return;
+    }
+
+    const last = logs[logs.length - 1];
+    const block = await readProvider.getBlock(last.blockNumber);
+    if (winnerAddr) winnerAddr.textContent = short(last.args.winner);
+    if (winnerAmt) winnerAmt.textContent = `${ethers.formatEther(last.args.winnerAmount)} iKAS`;
+    if (winnerTime) winnerTime.textContent = block?.timestamp ? new Date(block.timestamp * 1000).toLocaleString() : `Block #${last.blockNumber}`;
+    if (winnerEmpty) winnerEmpty.style.display = 'none';
+    if (winnerWrap) winnerWrap.style.display = 'block';
+  } catch {
+    if (winnerWrap) winnerWrap.style.display = 'none';
+    if (winnerEmpty) {
+      winnerEmpty.style.display = 'block';
+      winnerEmpty.textContent = 'Winner history unavailable on current provider.';
+    }
+  }
+}
+
+function focusCurrentGameFromLanding(event) {
+  if (event) event.preventDefault();
+  if (!currentAccount) {
+    toast('Connect wallet first to view and play the current game.', 'info');
+    return;
+  }
+  const target = document.getElementById('status-banner');
+  if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function setLoading(btnId, labelId, labelText, loading) {
