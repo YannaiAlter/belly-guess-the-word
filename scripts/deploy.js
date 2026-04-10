@@ -9,8 +9,8 @@ async function main() {
   console.log("Deploying Belly jackpot contract with account:", owner.address);
   console.log("Account balance:", ethers.formatEther(await ethers.provider.getBalance(owner.address)), "ETH\n");
 
-  const WordGuessing = await ethers.getContractFactory("WordGuessing");
-  const contract = await WordGuessing.deploy();
+  const BellyJackpot = await ethers.getContractFactory("BellyJackpot");
+  const contract = await BellyJackpot.deploy();
   await contract.waitForDeployment();
 
   const address = await contract.getAddress();
@@ -19,7 +19,7 @@ async function main() {
   // Write contract address + ABI to frontend so the UI can load it
   const artifactPath = path.join(
     __dirname,
-    "../artifacts/contracts/WordGuessing.sol/WordGuessing.json"
+    "../artifacts/contracts/WordGuessing.sol/BellyJackpot.json"
   );
   const artifact = JSON.parse(fs.readFileSync(artifactPath, "utf8"));
 

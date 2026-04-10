@@ -1,10 +1,10 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
-describe("WordGuessing (Jackpot mode)", function () {
+describe("BellyJackpot", function () {
   async function deployFixture() {
     const [owner, alice, bob, carol] = await ethers.getSigners();
-    const Factory = await ethers.getContractFactory("WordGuessing");
+    const Factory = await ethers.getContractFactory("BellyJackpot");
     const contract = await Factory.deploy();
     await contract.waitForDeployment();
     return { contract, owner, alice, bob, carol };

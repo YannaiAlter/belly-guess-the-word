@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-contract WordGuessing {
+contract BellyJackpot {
     uint256 private constant BPS_DENOM = 10_000;
     uint16 public constant MAX_FEE_BPS = 1_000; // hard cap: 10%
     uint256 public constant MIN_DURATION = 1 minutes;
