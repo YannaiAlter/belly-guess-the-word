@@ -10,6 +10,8 @@
     * { box-sizing: border-box; }
     body { margin:0; font-family: Inter, system-ui, sans-serif; background:var(--bg); color:var(--text); }
     .wrap { max-width: 1060px; margin: 0 auto; padding: 20px; }
+    .topbar { position: sticky; top: 10px; z-index: 20; display:flex; justify-content:flex-start; margin-bottom:10px; }
+    .topbar-card { display:none; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:8px 10px; align-items:center; gap:10px; }
     .card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px; margin-bottom:14px; }
     .row { display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
     .grid { display:grid; gap:10px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
@@ -38,25 +40,36 @@
     th { color:var(--muted); background:var(--surface2); }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
     .hidden { display:none; }
+    .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.6); display:none; align-items:center; justify-content:center; z-index:50; }
+    .modal { width:min(420px, 92vw); background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px; }
+    .wallet-option { width:100%; margin-top:8px; text-align:left; }
+    .loader-overlay {
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 12px;
+      margin: 10px auto 0;
+      width: min(420px, 90%);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+    .loader-overlay.hidden { display: none; }
+    .loader-spinner {
+      width: 34px; height: 34px; border-radius: 50%;
+      border: 3px solid #2f3750; border-top-color: #6d8dff;
+      animation: spin 0.85s linear infinite;
+    }
+    .loader-text { color: var(--muted); font-size: 14px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="card">
-      <div class="row" style="justify-content:space-between;">
-        <div>
-          <h1 style="margin:0;">Belly Jackpot</h1>
-          <div style="color:var(--muted); font-size:13px;">2-hour rounds, one guaranteed winner from all participants.</div>
-        </div>
-        <button id="btn-connect" class="primary" onclick="connectWallet()">Connect Wallet</button>
-        <button id="btn-logout" onclick="logoutWallet()" class="hidden">Logout</button>
-      </div>
-      <div class="row" style="margin-top:10px;">
+    <div class="topbar">
+      <div id="wallet-topbar" class="topbar-card">
         <span class="pill">Wallet: <b id="wallet-addr">Not connected</b></span>
         <span class="pill">Balance: <b id="wallet-balance">--</b></span>
-        <span class="pill">Round: <b id="round-id">--</b></span>
-        <span class="pill">Status: <b id="round-status">--</b></span>
-        <span id="role-pill" class="pill user">Regular User</span>
+        <button id="btn-logout-top" onclick="logoutWallet()">Disconnect</button>
       </div>
     </div>
 
@@ -66,14 +79,26 @@
       <div class="title" style="margin-top:14px;">Current Jackpot</div>
       <div class="amount" id="jackpot-hero-amount">0.00 iKAS</div>
       <div class="sub">Live pot updates every 5 seconds and after each transaction.</div>
+      <div class="title" style="margin-top:16px;">Want to join?</div>
       <div class="row" style="justify-content:center; margin-top:10px;">
-        <button id="btn-join" class="success" onclick="joinJackpot()">Join To Jackpot</button>
+        <button id="btn-connect" class="primary" onclick="openWalletPicker()">Connect Wallet</button>
+        <button id="btn-join" class="success hidden" onclick="joinJackpot()" disabled>Join To Jackpot</button>
         <button id="btn-finalize" class="warn hidden" onclick="finalizeJackpot()">Finalize (After End)</button>
+      </div>
+      <div id="app-loader" class="loader-overlay">
+        <div class="loader-spinner"></div>
+        <div class="loader-text" id="app-loader-text">Loading jackpot data...</div>
       </div>
     </div>
 
     <div class="card user-zone">
       <h2 class="section-title">Jackpot Round Data</h2>
+      <div class="row" style="margin-bottom:10px;">
+        <span class="pill">Data Source: <b id="data-source">Loading...</b></span>
+        <span class="pill">Round: <b id="round-id">--</b></span>
+        <span class="pill">Status: <b id="round-status">--</b></span>
+        <span id="role-pill" class="pill user">Regular User</span>
+      </div>
       <div class="grid">
         <div class="stat"><div class="label">Entry Fee</div><div class="value" id="entry-fee">--</div></div>
         <div class="stat"><div class="label">Participants</div><div class="value" id="participant-count">--</div></div>
@@ -110,6 +135,18 @@
       <div class="row" style="margin-top:10px;"><input id="new-fee-bps" type="number" step="1" min="0" max="1000" placeholder="Owner fee bps (max 1000)" /><button onclick="setFeeBps()">Set Fee Bps</button></div>
     </div>
   </div>
+
+  <div id="wallet-picker" class="modal-backdrop" onclick="closeWalletPicker(event)">
+    <div class="modal">
+      <h3 style="margin:0 0 6px;">Choose Wallet</h3>
+      <div style="color:var(--muted); font-size:13px; margin-bottom:8px;">Select one wallet to connect:</div>
+      <button class="wallet-option" onclick="connectWallet('kasware')">Kasware</button>
+      <button class="wallet-option" onclick="connectWallet('metamask')">MetaMask</button>
+      <button class="wallet-option" onclick="connectWallet('kastle')">Kastle</button>
+      <button class="wallet-option" onclick="closeWalletPicker()">Cancel</button>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.umd.min.js"></script>
   <script src="./jackpot-app.js"></script>
 </body>
