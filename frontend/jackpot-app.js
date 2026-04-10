@@ -19,15 +19,52 @@ function getInjectedProviders() {
   if (window.ethereum?.providers && Array.isArray(window.ethereum.providers)) return window.ethereum.providers;
   return window.ethereum ? [window.ethereum] : [];
 }
-function getKaswareProvider() {
-  return window.kasware?.ethereum || getInjectedProviders().find((p) => p.isKasware || p.isKasWare) || null;
+async function getClientVersionSafe(provider) {
+  try {
+    if (!provider?.request) return "";
+    const v = await provider.request({ method: "web3_clientVersion" });
+    return String(v || "").toLowerCase();
+  } catch {
+    return "";
+  }
 }
-function getMetaMaskProvider() {
-  return getInjectedProviders().find((p) => p.isMetaMask) || (window.ethereum?.isMetaMask ? window.ethereum : null);
-}
-function getKastleProvider() {
-  return window.kastle?.ethereum || window.kastleEthereum ||
-    getInjectedProviders().find((p) => p.isKastle || p.isKastleWallet) || null;
+async function resolveWalletProvider(walletType) {
+  const kaswareGlobal = window.kasware?.ethereum || null;
+  const kastleGlobal = window.kastle?.ethereum || window.kastleEthereum || null;
+  const candidates = [...new Set([kaswareGlobal, kastleGlobal, ...getInjectedProviders()].filter(Boolean))];
+
+  if (!candidates.length) return null;
+
+  const scored = await Promise.all(candidates.map(async (p) => {
+    const client = await getClientVersionSafe(p);
+    let score = 0;
+
+    if (walletType === "kasware") {
+      if (p === kaswareGlobal) score += 120;
+      if (p.isKasware || p.isKasWare) score += 60;
+      if (client.includes("kasware")) score += 80;
+      if (p.isMetaMask || client.includes("metamask")) score -= 120;
+      if (p === kastleGlobal || p.isKastle || p.isKastleWallet || client.includes("kastle")) score -= 120;
+    }
+    if (walletType === "metamask") {
+      if (p.isMetaMask) score += 80;
+      if (client.includes("metamask")) score += 100;
+      if (p === kaswareGlobal || p.isKasware || p.isKasWare || client.includes("kasware")) score -= 120;
+      if (p === kastleGlobal || p.isKastle || p.isKastleWallet || client.includes("kastle")) score -= 120;
+    }
+    if (walletType === "kastle") {
+      if (p === kastleGlobal) score += 120;
+      if (p.isKastle || p.isKastleWallet) score += 60;
+      if (client.includes("kastle")) score += 80;
+      if (p === kaswareGlobal || p.isKasware || p.isKasWare || client.includes("kasware")) score -= 120;
+      if (p.isMetaMask || client.includes("metamask")) score -= 120;
+    }
+
+    return { provider: p, score };
+  }));
+
+  scored.sort((a, b) => b.score - a.score);
+  return scored[0]?.score > 0 ? scored[0].provider : null;
 }
 function formatDuration(secBigInt){const sec=Number(secBigInt);const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;return h>0?`${h}h ${m}m ${s}s`:m>0?`${m}m ${s}s`:`${s}s`;}
 function parseRoundState(raw){return {roundId:raw[0],isRoundActive:raw[1],roundEndsAt:raw[2],entryFeeWei:raw[3],roundDuration:raw[4],feeBps:Number(raw[5]),potBalance:raw[6],participantCount:raw[7],winner:raw[8],winnerTicket:raw[9],finalized:raw[10],timeRemaining:raw[11]};}
@@ -151,7 +188,11 @@ async function loadWriteContract(){
   ownerAddress = await contract.owner();
 }
 function setConnectedUI(connected) {
-  byId("btn-connect").classList.toggle("hidden", connected);
+  const authIcons = byId("wallet-auth-icons");
+  if (authIcons) {
+    authIcons.classList.toggle("hidden", connected);
+    authIcons.style.display = connected ? "none" : "flex";
+  }
   const topbar = byId("wallet-topbar");
   if (topbar) topbar.style.display = connected ? "inline-flex" : "none";
   const joinBtn = byId("btn-join");
@@ -160,26 +201,12 @@ function setConnectedUI(connected) {
     if (!connected) joinBtn.disabled = true;
   }
 }
-function openWalletPicker() {
-  const modal = byId("wallet-picker");
-  if (modal) modal.style.display = "flex";
-}
-function closeWalletPicker(evt) {
-  if (!evt || evt.target === byId("wallet-picker")) {
-    const modal = byId("wallet-picker");
-    if (modal) modal.style.display = "none";
-  }
-}
 async function connectWallet(walletType){
-  let injected = null;
-  if (walletType === "kasware") injected = getKaswareProvider();
-  if (walletType === "metamask") injected = getMetaMaskProvider();
-  if (walletType === "kastle") injected = getKastleProvider();
+  const injected = await resolveWalletProvider(walletType);
   if (!injected) {
     alert(`${walletType || "Selected"} wallet not found in this browser.`);
     return;
   }
-  closeWalletPicker();
   provider=new ethers.BrowserProvider(injected);
   await provider.send('eth_requestAccounts',[]);
   signer=await provider.getSigner();
@@ -215,7 +242,7 @@ async function startRound(){if(!contract){alert('Connect wallet first.');return;
 async function setEntryFee(){if(!contract){alert('Connect wallet first.');return;}const v=byId('new-entry-fee').value.trim();if(!v)return;try{await waitTx(contract.setEntryFee(ethers.parseEther(v)));}catch(e){alert(e?.reason||e?.shortMessage||e?.message||'Set entry fee failed');}}
 async function setRoundDuration(){if(!contract){alert('Connect wallet first.');return;}const v=byId('new-duration').value.trim();if(!v)return;try{await waitTx(contract.setRoundDuration(BigInt(v)));}catch(e){alert(e?.reason||e?.shortMessage||e?.message||'Set duration failed');}}
 async function setFeeBps(){if(!contract){alert('Connect wallet first.');return;}const v=byId('new-fee-bps').value.trim();if(!v)return;try{await waitTx(contract.setFeeBps(Number(v)));}catch(e){alert(e?.reason||e?.shortMessage||e?.message||'Set fee bps failed');}}
-window.openWalletPicker=openWalletPicker;window.closeWalletPicker=closeWalletPicker;window.connectWallet=connectWallet;window.logoutWallet=logoutWallet;window.joinJackpot=joinJackpot;window.finalizeJackpot=finalizeJackpot;window.startRound=startRound;window.setEntryFee=setEntryFee;window.setRoundDuration=setRoundDuration;window.setFeeBps=setFeeBps;
+window.connectWallet=connectWallet;window.logoutWallet=logoutWallet;window.joinJackpot=joinJackpot;window.finalizeJackpot=finalizeJackpot;window.startRound=startRound;window.setEntryFee=setEntryFee;window.setRoundDuration=setRoundDuration;window.setFeeBps=setFeeBps;
 setAppLoader(true, "Loading jackpot data...");
 loadReadContract()
   .then(() => refreshState())
