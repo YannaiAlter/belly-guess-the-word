@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Belly — Developer Docs</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0d0f14;
+      --surface:  #161b27;
+      --surface2: #1e2535;
+      --border:   #252d40;
+      --accent:   #4f8eff;
+      --accent2:  #a78bfa;
+      --green:    #34d399;
+      --red:      #f87171;
+      --yellow:   #fbbf24;
+      --text:     #e2e8f0;
+      --text2:    #94a3b8;
+      --muted:    #64748b;
+      --radius:   10px;
+      --sidebar:  260px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    /* ─── Layout ─── */
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ─── Sidebar ─── */
+    .sidebar {
+      width: var(--sidebar);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      overflow-y: auto;
+      padding: 24px 0;
+      flex-shrink: 0;
+    }
+    .sidebar-logo {
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      padding: 0 20px 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+    .sidebar-logo a { color: var(--text); text-decoration: none; }
+    .sidebar-logo span { color: var(--accent); }
+    .sidebar-logo .tag {
+      font-size: 10px;
+      color: var(--muted);
+      font-weight: 600;
+      display: block;
+      margin-top: 2px;
+      letter-spacing: .5px;
+    }
+
+    .nav-section {
+      padding: 6px 20px 2px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+    }
+    .sidebar nav a {
+      display: block;
+      padding: 6px 20px;
+      font-size: 13px;
+      color: var(--text2);
+      text-decoration: none;
+      border-left: 2px solid transparent;
+      transition: color .12s, border-color .12s;
+    }
+    .sidebar nav a:hover { color: var(--text); border-left-color: var(--border); }
+    .sidebar nav a.active { color: var(--accent); border-left-color: var(--accent); }
+
+    .sidebar-back {
+      padding: 20px 20px 0;
+      margin-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+    .sidebar-back a {
+      font-size: 12px;
+      color: var(--muted);
+      text-decoration: none;
+    }
+    .sidebar-back a:hover { color: var(--accent); }
+
+    /* ─── Content ─── */
+    .content {
+      margin-left: var(--sidebar);
+      flex: 1;
+      padding: 48px 56px 80px;
+      max-width: 860px;
+    }
+
+    /* ─── Typography ─── */
+    h1 {
+      font-size: 34px;
+      font-weight: 800;
+      letter-spacing: -0.8px;
+      margin-bottom: 10px;
+    }
+    h1 span { color: var(--accent); }
+
+    h2 {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 52px 0 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    h2:first-of-type { margin-top: 32px; }
+
+    h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin: 28px 0 8px;
+      color: var(--text);
+    }
+
+    p { margin-bottom: 14px; color: var(--text2); }
+    p strong { color: var(--text); }
+    p a { color: var(--accent); text-decoration: none; }
+    p a:hover { text-decoration: underline; }
+
+    li {
+      color: var(--text2);
+      margin-bottom: 5px;
+    }
+    li strong { color: var(--text); }
+    ul, ol { padding-left: 20px; margin-bottom: 14px; }
+
+    /* ─── Code blocks ─── */
+    pre {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      overflow-x: auto;
+      margin: 12px 0 18px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    code {
+      font-family: 'Consolas', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 13px;
+    }
+    pre code { color: var(--accent2); }
+    :not(pre) > code {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 1px 6px;
+      font-size: 12.5px;
+      color: var(--accent2);
+    }
+
+    /* Keyword highlighting */
+    .kw { color: var(--accent); }
+    .cm { color: var(--muted); font-style: italic; }
+    .str { color: var(--green); }
+    .num { color: var(--yellow); }
+    .fn  { color: #f0b87a; }
+
+    /* ─── Callout boxes ─── */
+    .callout {
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin: 14px 0 20px;
+      font-size: 14px;
+    }
+    .callout.info   { background: #0a1a30; border-left: 3px solid var(--accent); }
+    .callout.warn   { background: #1e1a0a; border-left: 3px solid var(--yellow); }
+    .callout.danger { background: #1a0a0a; border-left: 3px solid var(--red);    }
+    .callout.ok     { background: #0a1e14; border-left: 3px solid var(--green);  }
+    .callout p { margin: 0; color: var(--text2); }
+    .callout strong { color: var(--text); }
+
+    /* ─── Tables ─── */
+    .tbl-wrap { overflow-x: auto; margin: 12px 0 20px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+    }
+    th {
+      text-align: left;
+      padding: 9px 14px;
+      background: var(--surface);
+      border-bottom: 2px solid var(--border);
+      color: var(--text);
+      font-weight: 700;
+    }
+    td {
+      padding: 9px 14px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text2);
+      vertical-align: top;
+    }
+    td code { font-size: 12px; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--surface); }
+
+    /* ─── Section tags ─── */
+    .tag {
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      margin-right: 6px;
+    }
+    .tag-view    { background: #0a1a30; color: var(--accent);  border: 1px solid #1a3a60; }
+    .tag-mutate  { background: #1e0a0a; color: var(--red);     border: 1px solid #4a1a1a; }
+    .tag-owner   { background: #1a1130; color: var(--accent2); border: 1px solid #3a2a60; }
+    .tag-event   { background: #0a1e14; color: var(--green);   border: 1px solid #1a4a28; }
+    .tag-const   { background: #1e1a0a; color: var(--yellow);  border: 1px solid #4a3a0a; }
+
+    /* ─── Step list ─── */
+    .steps { counter-reset: step; list-style: none; padding: 0; }
+    .steps li {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 16px;
+      counter-increment: step;
+    }
+    .steps li::before {
+      content: counter(step);
+      min-width: 26px; height: 26px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .steps li strong { color: var(--text); display: block; margin-bottom: 2px; }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 720px) {
+      .sidebar { display: none; }
+      .content { margin-left: 0; padding: 28px 20px 60px; }
+      h1 { font-size: 26px; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ─── Sidebar ─────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <a href="index.html">Bel<span>ly</span></a>
+      <span class="tag">Developer Docs</span>
+    </div>
+
+    <nav>
+      <div class="nav-section">Introduction</div>
+      <a href="#overview">Overview</a>
+      <a href="#quickstart">Quick Start</a>
+      <a href="#architecture">Architecture</a>
+
+      <div class="nav-section" style="margin-top:10px;">Smart Contract</div>
+      <a href="#constants">Constants</a>
+      <a href="#state">State Variables</a>
+      <a href="#functions">Functions</a>
+      <a href="#events">Events</a>
+
+      <div class="nav-section" style="margin-top:10px;">Frontend</div>
+      <a href="#integration">Integration Guide</a>
+      <a href="#wallet-support">Wallet Support</a>
+
+      <div class="nav-section" style="margin-top:10px;">Deployment</div>
+      <a href="#deploy-local">Local (Hardhat)</a>
+      <a href="#deploy-igra">IGRA Network</a>
+      <a href="#config">Configuration</a>
+
+      <div class="nav-section" style="margin-top:10px;">Security</div>
+      <a href="#security">Security Patterns</a>
+    </nav>
+
+    <div class="sidebar-back">
+      <a href="index.html">← Back to game</a>
+    </div>
+  </aside>
+
+  <!-- ─── Main Content ─────────────────────────── -->
+  <main class="content">
+
+    <h1>Bel<span>ly</span> Docs</h1>
+    <p style="font-size:16px; color:var(--text2);">
+      Complete developer reference for the Belly smart contract and frontend.
+    </p>
+
+    <!-- ─── OVERVIEW ─── -->
+    <h2 id="overview">Overview</h2>
+    <p>
+      Belly is an on-chain word-guessing game built on <strong>IGRA Network</strong> (an EVM-compatible Kaspa Layer 2).
+      Players pay <strong>10 iKAS</strong> per guess. The first player to guess the secret word wins
+      <strong>95%</strong> of the accumulated prize pool; the remaining 5% is the operator fee.
+    </p>
+    <p>
+      The secret word is never transmitted to the blockchain. Instead, the owner computes
+      <code>keccak256(secretWord)</code> client-side and stores only the hash. When a player
+      submits a guess, the contract hashes their plaintext guess and compares it to the stored hash.
+    </p>
+
+    <div class="callout ok">
+      <p><strong>Key properties:</strong> Trustless win verification · No plaintext exposure · Reentrancy-safe · 1-day timeout mechanism</p>
+    </div>
+
+    <!-- ─── QUICK START ─── -->
+    <h2 id="quickstart">Quick Start</h2>
+    <p>Get a local instance running in under 5 minutes.</p>
+
+    <h3>Prerequisites</h3>
+    <ul>
+      <li>Node.js ≥ 18</li>
+      <li>npm ≥ 9</li>
+      <li>A browser with MetaMask or KasWare installed (or use Dev Mode)</li>
+    </ul>
+
+    <h3>Steps</h3>
+    <ol class="steps">
+      <li>
+        <div>
+          <strong>Install dependencies</strong>
+          <pre><code>npm install</code></pre>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Start a local Hardhat node (keep this terminal open)</strong>
+          <pre><code>npx hardhat node</code></pre>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Compile &amp; deploy the contract</strong>
+          <pre><code>npm run deploy</code></pre>
+          This writes <code>frontend/contract.json</code> containing the contract address and ABI.
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Serve the frontend</strong>
+          <pre><code>npm run serve</code></pre>
+          Open <a href="http://localhost:3000" target="_blank">http://localhost:3000</a> and connect with <strong>Dev Mode</strong>.
+        </div>
+      </li>
+    </ol>
+
+    <!-- ─── ARCHITECTURE ─── -->
+    <h2 id="architecture">Architecture</h2>
+    <p>
+      The project consists of three layers:
+    </p>
+    <ul>
+      <li><strong>Smart contract</strong> (<code>contracts/WordGuessing.sol</code>) — Solidity 0.8.20, deployed to IGRA Network (or Hardhat for dev).</li>
+      <li><strong>Frontend</strong> (<code>frontend/</code>) — Plain HTML + vanilla JS using ethers.js v6. No build step required.</li>
+      <li><strong>Toolchain</strong> — Hardhat for compilation, testing, and deployment. <code>serve</code> for static hosting.</li>
+    </ul>
+    <p>
+      <code>frontend/contract.json</code> is auto-generated at deploy time and contains the contract
+      address, ABI, network info, and deploy timestamp. It is the only coupling between the contract
+      and the frontend.
+    </p>
+
+    <!-- ─── CONSTANTS ─── -->
+    <h2 id="constants">Constants</h2>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Value</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>GUESS_PRICE</code></td>
+            <td><code>10 ether</code> (10 × 10<sup>18</sup> wei)</td>
+            <td>Exact iKAS amount required per guess.</td>
+          </tr>
+          <tr>
+            <td><code>COOLDOWN</code></td>
+            <td><code>10 seconds</code></td>
+            <td>Minimum time a player must wait between guesses.</td>
+          </tr>
+          <tr>
+            <td><code>MAX_GUESSES_PER_ADDRESS</code></td>
+            <td><code>20</code></td>
+            <td>Maximum guesses one address may submit per game.</td>
+          </tr>
+          <tr>
+            <td><code>GAME_TIMEOUT</code></td>
+            <td><code>1 day</code></td>
+            <td>After this period without a winner, the owner may reclaim the pot.</td>
+          </tr>
+          <tr>
+            <td><code>WINNER_BPS</code></td>
+            <td><code>9500</code> (95%)</td>
+            <td>Basis points of pot awarded to the winner.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ─── STATE VARIABLES ─── -->
+    <h2 id="state">State Variables</h2>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>Variable</th><th>Type</th><th>Visibility</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>owner</code></td>
+            <td><code>address</code></td>
+            <td>public</td>
+            <td>Deployer. Can start and reset games.</td>
+          </tr>
+          <tr>
+            <td><code>wordHash</code></td>
+            <td><code>bytes32</code></td>
+            <td>public</td>
+            <td>keccak256 hash of the current secret word.</td>
+          </tr>
+          <tr>
+            <td><code>hint</code></td>
+            <td><code>string</code></td>
+            <td>public</td>
+            <td>Optional public hint shown to players.</td>
+          </tr>
+          <tr>
+            <td><code>potBalance</code></td>
+            <td><code>uint256</code></td>
+            <td>public</td>
+            <td>Accumulated iKAS from guess fees (in wei).</td>
+          </tr>
+          <tr>
+            <td><code>isActive</code></td>
+            <td><code>bool</code></td>
+            <td>public</td>
+            <td>True while a game is accepting guesses.</td>
+          </tr>
+          <tr>
+            <td><code>winner</code></td>
+            <td><code>address</code></td>
+            <td>public</td>
+            <td><code>address(0)</code> until a winner is found.</td>
+          </tr>
+          <tr>
+            <td><code>guessesCount</code></td>
+            <td><code>uint256</code></td>
+            <td>public</td>
+            <td>Total guesses submitted in the current game.</td>
+          </tr>
+          <tr>
+            <td><code>gameStartedAt</code></td>
+            <td><code>uint256</code></td>
+            <td>public</td>
+            <td>Unix timestamp of when the current game started.</td>
+          </tr>
+          <tr>
+            <td><code>lastGuessTimestamp</code></td>
+            <td><code>mapping(address ⇒ uint256)</code></td>
+            <td>public</td>
+            <td>Per-player cooldown tracking.</td>
+          </tr>
+          <tr>
+            <td><code>guessesPerAddress</code></td>
+            <td><code>mapping(address ⇒ uint256)</code></td>
+            <td>public</td>
+            <td>Per-player guess counter for the current game.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ─── FUNCTIONS ─── -->
+    <h2 id="functions">Functions</h2>
+
+    <h3>
+      <span class="tag tag-owner">owner only</span>
+      <span class="tag tag-mutate">state-changing</span>
+      <code>startGame(bytes32 _wordHash, string _hint)</code>
+    </h3>
+    <p>Opens a new game round. The <code>_wordHash</code> must be computed <em>off-chain</em> as:</p>
+    <pre><code><span class="cm">// JavaScript (ethers.js v6)</span>
+<span class="kw">const</span> wordHash = ethers.<span class="fn">keccak256</span>(ethers.<span class="fn">toUtf8Bytes</span>(secretWord));</code></pre>
+    <pre><code><span class="cm">// Solidity (on-chain utility)</span>
+wordGuessing.<span class="fn">computeHash</span>(<span class="str">"blockchain"</span>); <span class="cm">// returns bytes32</span></code></pre>
+    <p>Emits: <code>GameStarted</code></p>
+
+    <h3>
+      <span class="tag tag-mutate">payable</span>
+      <span class="tag tag-mutate">state-changing</span>
+      <code>submitGuess(string guess)</code>
+    </h3>
+    <p>
+      Submits a guess. Must attach exactly <code>GUESS_PRICE</code> (10 iKAS) as <code>msg.value</code>.
+      Checks performed (in order): game active · correct payment · cooldown elapsed · guess limit not reached.
+    </p>
+    <p>
+      The contract hashes the plaintext guess and compares with <code>wordHash</code>. On a correct guess,
+      95% of the pot is sent to the caller immediately; 5% to the owner.
+    </p>
+    <p>Emits: <code>GuessSubmitted</code> (always) + <code>WinnerDeclared</code> (on correct guess)</p>
+
+    <pre><code><span class="cm">// ethers.js v6 — submit a guess</span>
+<span class="kw">const</span> tx = <span class="kw">await</span> contract.<span class="fn">submitGuess</span>(<span class="str">"blockchain"</span>, {
+  value: ethers.<span class="fn">parseEther</span>(<span class="str">"10"</span>)
+});
+<span class="kw">const</span> receipt = <span class="kw">await</span> tx.<span class="fn">wait</span>();</code></pre>
+
+    <h3>
+      <span class="tag tag-owner">owner only</span>
+      <span class="tag tag-mutate">state-changing</span>
+      <code>resetTimedOutGame()</code>
+    </h3>
+    <p>
+      Allows the owner to close the game and reclaim the pot once <code>GAME_TIMEOUT</code>
+      (1 day) has elapsed without a winner. Protected by <code>nonReentrant</code>.
+    </p>
+    <p>Emits: <code>GameReset</code></p>
+
+    <h3>
+      <span class="tag tag-view">view</span>
+      <code>getGameState()</code>
+    </h3>
+    <p>Returns a full snapshot of the current game. This is the primary read call used by the frontend.</p>
+    <pre><code>(<span class="kw">bool</span>    isActive,
+ <span class="kw">bytes32</span> wordHash,
+ <span class="kw">string</span>  hint,
+ <span class="kw">uint256</span> potBalance,
+ <span class="kw">address</span> winner,
+ <span class="kw">uint256</span> guessesCount,
+ <span class="kw">uint256</span> gameStartedAt,
+ <span class="kw">uint256</span> timeRemaining) = <span class="kw">await</span> contract.<span class="fn">getGameState</span>();</code></pre>
+
+    <h3>
+      <span class="tag tag-view">view</span>
+      <code>getPot()</code>
+    </h3>
+    <p>Returns the current pot balance in wei.</p>
+
+    <h3>
+      <span class="tag tag-view">pure</span>
+      <code>computeHash(string word)</code>
+    </h3>
+    <p>
+      Returns <code>keccak256(abi.encodePacked(word))</code>. Useful for testing or verifying a hash on-chain.
+      Use this off-chain only — calling it reveals the word in the transaction trace.
+    </p>
+
+    <!-- ─── EVENTS ─── -->
+    <h2 id="events">Events</h2>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>Event</th><th>Parameters</th><th>Emitted when</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>GameStarted</code></td>
+            <td><code>bytes32 wordHash, string hint, uint256 timestamp</code></td>
+            <td>Owner calls <code>startGame()</code></td>
+          </tr>
+          <tr>
+            <td><code>GuessSubmitted</code></td>
+            <td><code>address player, uint256 totalGuesses, bool correct, uint256 timestamp</code></td>
+            <td>Any player submits a guess (correct or not)</td>
+          </tr>
+          <tr>
+            <td><code>WinnerDeclared</code></td>
+            <td><code>address winner, uint256 winnerAmount, uint256 feeAmount</code></td>
+            <td>A guess is correct and funds are distributed</td>
+          </tr>
+          <tr>
+            <td><code>GameReset</code></td>
+            <td><code>address owner, uint256 reclaimedAmount, uint256 timestamp</code></td>
+            <td>Owner resets a timed-out game</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Listening to events (ethers.js v6)</h3>
+    <pre><code>contract.<span class="fn">on</span>(<span class="str">"GuessSubmitted"</span>, (player, totalGuesses, correct, timestamp) =&gt; {
+  console.<span class="fn">log</span>(`${player} guessed — ${correct ? <span class="str">"correct!"</span> : <span class="str">"wrong"</span>}`);
+});
+
+contract.<span class="fn">on</span>(<span class="str">"WinnerDeclared"</span>, (winner, winnerAmount, feeAmount) =&gt; {
+  console.<span class="fn">log</span>(`Winner: ${winner}, payout: ${ethers.<span class="fn">formatEther</span>(winnerAmount)} iKAS`);
+});</code></pre>
+
+    <!-- ─── INTEGRATION ─── -->
+    <h2 id="integration">Frontend Integration Guide</h2>
+    <p>
+      The frontend uses <strong>ethers.js v6</strong> loaded from a CDN. There is no build step —
+      the page is a single <code>index.html</code> and <code>app.js</code>.
+    </p>
+
+    <h3>Loading the contract</h3>
+    <p>
+      At deploy time, <code>scripts/deploy.js</code> writes <code>frontend/contract.json</code>
+      with the contract address and full ABI. The frontend fetches this file on load:
+    </p>
+    <pre><code><span class="kw">const</span> res  = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">"./contract.json"</span>);
+<span class="kw">const</span> info = <span class="kw">await</span> res.<span class="fn">json</span>(); <span class="cm">// { address, abi, network, chainId, deployedAt }</span>
+
+<span class="kw">const</span> contract = <span class="kw">new</span> ethers.<span class="fn">Contract</span>(info.address, info.abi, signer);</code></pre>
+
+    <h3>Reading state</h3>
+    <p>Call <code>getGameState()</code> for a single-RPC snapshot of all game state. Poll it on a timer (every 5–10 seconds) and subscribe to events for real-time updates.</p>
+
+    <h3>Hashing the secret word</h3>
+    <p>The owner hashes the word client-side before calling <code>startGame</code>:</p>
+    <pre><code><span class="kw">const</span> wordHash = ethers.<span class="fn">keccak256</span>(ethers.<span class="fn">toUtf8Bytes</span>(secretWord));
+<span class="kw">await</span> contract.<span class="fn">startGame</span>(wordHash, hint);</code></pre>
+    <div class="callout warn">
+      <p><strong>Important:</strong> Never log or transmit the plaintext secret word. Only send the hash to the chain. Exposing the secret in the browser console or network requests makes the game trivially solvable.</p>
+    </div>
+
+    <!-- ─── WALLET SUPPORT ─── -->
+    <h2 id="wallet-support">Wallet Support</h2>
+    <p>The frontend supports three connection modes:</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>Mode</th><th>Provider</th><th>Use case</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>KasWare</strong></td>
+            <td><code>window.kasware.ethereum</code></td>
+            <td>Recommended for IGRA Network mainnet</td>
+          </tr>
+          <tr>
+            <td><strong>MetaMask</strong></td>
+            <td><code>window.ethereum</code> (isMetaMask)</td>
+            <td>General EVM wallet; works on any chain</td>
+          </tr>
+          <tr>
+            <td><strong>Dev Mode</strong></td>
+            <td><code>JsonRpcProvider</code> on <code>http://127.0.0.1:8545</code></td>
+            <td>Local Hardhat — no browser extension needed</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      Provider detection is done once on <code>DOMContentLoaded</code>. Both KasWare and MetaMask
+      fire <code>accountsChanged</code> and <code>chainChanged</code> events which trigger a reconnect
+      or page reload respectively.
+    </p>
+
+    <!-- ─── DEPLOY LOCAL ─── -->
+    <h2 id="deploy-local">Deploying Locally (Hardhat)</h2>
+    <pre><code><span class="cm"># Terminal 1 — start local chain</span>
+npx hardhat node
+
+<span class="cm"># Terminal 2 — deploy</span>
+npm run deploy
+
+<span class="cm"># Terminal 2 — serve frontend</span>
+npm run serve</code></pre>
+
+    <p>
+      The deploy script prints the contract address, MetaMask network settings, and the first three
+      test account addresses with their private keys.
+    </p>
+
+    <h3>Adding Hardhat to MetaMask</h3>
+    <ul>
+      <li><strong>Network Name:</strong> Hardhat Local</li>
+      <li><strong>RPC URL:</strong> <code>http://127.0.0.1:8545</code></li>
+      <li><strong>Chain ID:</strong> <code>31337</code></li>
+      <li><strong>Currency:</strong> ETH</li>
+    </ul>
+
+    <!-- ─── DEPLOY IGRA ─── -->
+    <h2 id="deploy-igra">Deploying to IGRA Network</h2>
+
+    <ol class="steps">
+      <li>
+        <div>
+          <strong>Create a <code>.env</code> file from the template</strong>
+          <pre><code>cp .env.example .env</code></pre>
+          Fill in <code>PRIVATE_KEY</code>, <code>IGRA_RPC_URL</code>, and <code>IGRA_CHAIN_ID</code>.
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Install dotenv (if not already present)</strong>
+          <pre><code>npm install --save-dev dotenv</code></pre>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Deploy to IGRA mainnet</strong>
+          <pre><code>npm run deploy:igra</code></pre>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Serve the frontend</strong>
+          <p>Upload <code>frontend/</code> to any static hosting (Vercel, Netlify, IPFS, etc.). No server required.</p>
+        </div>
+      </li>
+    </ol>
+
+    <div class="callout danger">
+      <p><strong>Security:</strong> Never commit your <code>.env</code> file. Add it to <code>.gitignore</code> before pushing to a public repo.</p>
+    </div>
+
+    <!-- ─── CONFIG ─── -->
+    <h2 id="config">Configuration Reference</h2>
+
+    <h3><code>.env</code> variables</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>Variable</th><th>Required</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>PRIVATE_KEY</code></td>
+            <td>Yes (mainnet)</td>
+            <td>Deployer private key (with or without 0x prefix).</td>
+          </tr>
+          <tr>
+            <td><code>IGRA_RPC_URL</code></td>
+            <td>Yes (mainnet)</td>
+            <td>IGRA Network JSON-RPC endpoint.</td>
+          </tr>
+          <tr>
+            <td><code>IGRA_CHAIN_ID</code></td>
+            <td>Yes (mainnet)</td>
+            <td>IGRA Network chain ID (integer).</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Hardhat networks (<code>hardhat.config.js</code>)</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>Network key</th><th>npm script</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>localhost</code></td>
+            <td><code>npm run deploy</code></td>
+            <td>Local Hardhat node on port 8545.</td>
+          </tr>
+          <tr>
+            <td><code>igra</code></td>
+            <td><code>npm run deploy:igra</code></td>
+            <td>IGRA Network mainnet (requires <code>.env</code>).</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ─── SECURITY ─── -->
+    <h2 id="security">Security Patterns</h2>
+
+    <h3>Checks-Effects-Interactions (CEI)</h3>
+    <p>
+      In <code>submitGuess</code>, all state mutations occur <em>before</em> any <code>.call{value:…}()</code>
+      transfers. This prevents reentrancy even in the absence of a mutex.
+    </p>
+
+    <h3>Reentrancy guard (<code>nonReentrant</code>)</h3>
+    <p>
+      A boolean mutex (<code>_locked</code>) is used as a second line of defence on <code>submitGuess</code>
+      and <code>resetTimedOutGame</code>. The CEI pattern is the primary protection; the guard adds depth.
+    </p>
+
+    <h3>Hash-based secret verification</h3>
+    <p>
+      The secret word is never transmitted on-chain. Only its <code>keccak256</code> hash is stored. A player's
+      plaintext guess is hashed inside the EVM and compared. This is tamper-proof: the owner cannot change
+      the target word mid-game without triggering a new transaction.
+    </p>
+
+    <div class="callout warn">
+      <p>
+        <strong>Known limitation:</strong> Short or common words are susceptible to brute-force guessing.
+        Owners should choose uncommon, multi-syllable words. A dictionary-attack resistant scheme
+        (e.g. salted hashes) is a possible future enhancement.
+      </p>
+    </div>
+
+    <h3>Timeout &amp; drain prevention</h3>
+    <p>
+      If no winner is found within <code>GAME_TIMEOUT</code> (1 day), the owner can call
+      <code>resetTimedOutGame()</code> to reclaim the pot. This prevents funds being locked forever
+      if all players give up.
+    </p>
+
+    <h3>Per-player limits</h3>
+    <p>
+      A cooldown of 10 seconds between guesses and a cap of 20 guesses per address per game prevent
+      spam and keep the game fair for all participants.
+    </p>
+
+    <div class="callout info">
+      <p>
+        The contract has been written conservatively and is not audited. For a high-value production
+        deployment, a professional security audit is strongly recommended.
+      </p>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  // Highlight active sidebar link on scroll
+  const sections = document.querySelectorAll('h2[id], h3[id]');
+  const links    = document.querySelectorAll('.sidebar nav a');
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.getAttribute('id');
+        links.forEach(l => {
+          l.classList.toggle('active', l.getAttribute('href') === '#' + id);
+        });
+      }
+    });
+  }, { rootMargin: '-20% 0% -70% 0%' });
+
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

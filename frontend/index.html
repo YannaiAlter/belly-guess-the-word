@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Belly — a playful on-chain word game on IGRA Network. Guess the secret word and win the prize pool." />
+  <title>Belly · IGRA Network</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0d0f14;
+      --surface:  #161b27;
+      --surface2: #1e2535;
+      --border:   #252d40;
+      --accent:   #4f8eff;
+      --accent2:  #a78bfa;
+      --green:    #34d399;
+      --red:      #f87171;
+      --yellow:   #fbbf24;
+      --text:     #e2e8f0;
+      --text2:    #94a3b8;
+      --muted:    #64748b;
+      --radius:   12px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── Header ─────────────────────────────── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 13px 28px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .logo {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      text-decoration: none;
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .logo-mark {
+      width: 28px;
+      height: 28px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      box-shadow: 0 6px 18px rgba(79, 142, 255, .28);
+    }
+    .logo-text { color: var(--text); }
+    .logo-text span { color: var(--accent); }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* ── Buttons ─────────────────────────────── */
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 16px;
+      transition: opacity .15s, transform .1s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    button:hover:not(:disabled) { opacity: .82; }
+    button:active:not(:disabled) { transform: scale(.97); }
+    button:disabled { opacity: .38; cursor: not-allowed; }
+
+    .btn-primary  { background: var(--accent); color: #fff; }
+    .btn-success  { background: var(--green);  color: #0d0f14; font-weight: 700; }
+    .btn-danger   { background: var(--red);    color: #fff; }
+    .btn-ghost    { background: transparent; border: 1px solid var(--border); color: var(--text2); }
+    .btn-ghost:hover:not(:disabled) { border-color: var(--accent); color: var(--text); opacity: 1; }
+    .btn-sm { padding: 5px 12px; font-size: 12px; }
+
+    /* ── Network pill ────────────────────────── */
+    .net-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text2);
+    }
+    .net-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--muted);
+      flex-shrink: 0;
+    }
+    .net-pill.ok .net-dot { background: var(--green); }
+
+    /* ── Wallet pill ─────────────────────────── */
+    .wallet-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 5px 13px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .owner-chip {
+      background: #1a1130;
+      color: var(--accent2);
+      border: 1px solid var(--accent2);
+      border-radius: 20px;
+      padding: 1px 7px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    /* ── Toast System ────────────────────────── */
+    #toasts {
+      position: fixed;
+      top: 16px; right: 16px;
+      z-index: 9000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+    .toast {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 10px;
+      padding: 11px 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      min-width: 240px;
+      max-width: 360px;
+      transform: translateX(110%);
+      transition: transform .3s cubic-bezier(.4,0,.2,1);
+      pointer-events: all;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .toast.show { transform: translateX(0); }
+    .toast.t-success { border-left-color: var(--green); }
+    .toast.t-error   { border-left-color: var(--red);   }
+    .toast.t-warn    { border-left-color: var(--yellow); }
+    .toast .t-icon   { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+    .toast .t-msg    { flex: 1; color: var(--text); }
+    .toast .t-close  { background: none; border: none; color: var(--muted); padding: 0 2px;
+                       font-size: 15px; cursor: pointer; line-height: 1; margin-top: -1px;
+                       flex-shrink: 0; }
+    .toast .t-close:hover { color: var(--text); }
+
+    /* ── Spinner ─────────────────────────────── */
+    .spin {
+      display: inline-block;
+      width: 13px; height: 13px;
+      border: 2px solid rgba(255,255,255,.25);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Main Layout ─────────────────────────── */
+    main { max-width: 1060px; margin: 0 auto; padding: 28px 20px; }
+
+    /* ── Not-Connected Screen ────────────────── */
+    #not-connected {
+      text-align: center;
+      padding: 52px 16px;
+    }
+    .hero-title {
+      font-size: 44px;
+      font-weight: 800;
+      letter-spacing: -1.2px;
+      margin-bottom: 12px;
+    }
+    .hero-title span { color: var(--accent); }
+    .hero-sub {
+      color: var(--text2);
+      font-size: 16px;
+      margin-bottom: 16px;
+      max-width: 660px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .4px;
+      text-transform: uppercase;
+      color: var(--accent2);
+      border: 1px solid #3a2a60;
+      background: #1a1130;
+      border-radius: 999px;
+      padding: 6px 12px;
+      margin-bottom: 18px;
+    }
+    .hero-cta {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 34px;
+    }
+
+    .wallet-options {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 32px;
+    }
+    .wallet-card {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 26px;
+      cursor: pointer;
+      text-align: center;
+      min-width: 148px;
+      transition: border-color .15s, transform .12s;
+    }
+    .wallet-card:hover:not(.unavailable) { border-color: var(--accent); transform: translateY(-3px); }
+    .wallet-card.kasware:hover:not(.unavailable) { border-color: #70e000; }
+    .wallet-card.devmode:hover { border-color: var(--yellow); }
+    .wallet-card.unavailable { opacity: .38; cursor: not-allowed; }
+    .wallet-card img { border-radius: 8px; margin: 0 auto 10px; display: block; }
+    .wc-name { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+    .wc-sub  { font-size: 11px; color: var(--muted); }
+
+    /* Setup guide */
+    details.setup-guide {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      max-width: 520px;
+      margin: 0 auto;
+      text-align: left;
+    }
+    details.setup-guide summary {
+      cursor: pointer;
+      color: var(--text2);
+      font-size: 13px;
+      font-weight: 600;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    details.setup-guide summary::before { content: '▶'; font-size: 9px; color: var(--muted); }
+    details.setup-guide[open] summary::before { content: '▼'; }
+    .setup-guide code {
+      display: block;
+      background: var(--bg);
+      border-radius: 6px;
+      padding: 7px 12px;
+      font-size: 12px;
+      margin: 4px 0;
+      color: var(--accent2);
+      font-family: 'Consolas', monospace;
+    }
+    .step-lbl {
+      font-size: 11px;
+      color: var(--muted);
+      margin: 12px 0 4px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    /* ── Status Banner ───────────────────────── */
+    .status-banner {
+      border-radius: var(--radius);
+      padding: 13px 18px;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .sb-active   { background: #052e1b; border: 1px solid var(--green); }
+    .sb-inactive { background: var(--surface); border: 1px solid var(--border); }
+    .sb-ended    { background: #1a1010; border: 1px solid #5a2525; }
+    .sb-waiting  { background: #1e1a0a; border: 1px solid #5a4810; }
+
+    .sb-left { display: flex; align-items: center; gap: 10px; }
+    .sb-dot {
+      width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
+    }
+    .sb-active .sb-dot   { background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite; }
+    .sb-inactive .sb-dot { background: var(--muted); }
+    .sb-ended .sb-dot    { background: var(--red); }
+    .sb-waiting .sb-dot  { background: var(--yellow); }
+    @keyframes pulse { 0%,100%{ opacity:1; } 50%{ opacity:.5; } }
+
+    .sb-title {
+      font-size: 15px; font-weight: 700;
+    }
+    .sb-active   .sb-title { color: var(--green); }
+    .sb-inactive .sb-title { color: var(--muted); }
+    .sb-ended    .sb-title { color: var(--red); }
+    .sb-waiting  .sb-title { color: var(--yellow); }
+
+    .sb-meta { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; font-size: 13px; }
+    .sb-stat { display: flex; align-items: center; gap: 4px; color: var(--text2); }
+    .sb-stat strong { color: var(--text); }
+
+    /* ── Game Grid ───────────────────────────── */
+    .game-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    /* ── Cards ───────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+    .card-lbl {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    /* Hint box */
+    .hint-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 13px 15px;
+      font-style: italic;
+      color: var(--accent2);
+      font-size: 15px;
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+    .hint-box.empty { color: var(--muted); font-style: normal; font-size: 13px; }
+
+    /* Mini stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .stat-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+    .stat-lbl { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+    .stat-val { font-size: 18px; font-weight: 700; }
+    .stat-val.green  { color: var(--green); }
+    .stat-val.yellow { color: var(--yellow); }
+
+    /* Session guesses */
+    .guess-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .gtag {
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      background: #2d1b1b;
+      color: var(--red);
+      border: 1px solid #5a2525;
+    }
+    .gtag.correct {
+      background: #052e1b;
+      color: var(--green);
+      border-color: #0a5030;
+    }
+
+    /* ── Play Card ───────────────────────────── */
+    .guess-row {
+      display: flex; gap: 8px; margin-bottom: 10px;
+    }
+    .guess-row input {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-size: 15px;
+      outline: none;
+      transition: border-color .15s;
+      min-width: 0;
+    }
+    .guess-row input:focus { border-color: var(--accent); }
+
+    .guess-meta-row {
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* Cooldown */
+    .cooldown-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+    }
+    .cd-row {
+      display: flex; justify-content: space-between;
+      font-size: 12px; color: var(--muted); margin-bottom: 6px;
+    }
+    .cd-track {
+      background: var(--border);
+      border-radius: 4px;
+      height: 4px;
+      overflow: hidden;
+    }
+    .cd-fill {
+      height: 100%;
+      background: var(--accent);
+      transition: width .5s linear;
+    }
+
+    /* Guess progress */
+    .prog-wrap { margin-top: 12px; }
+    .prog-lbl {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .prog-track {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      height: 5px;
+      overflow: hidden;
+    }
+    .prog-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 4px;
+      transition: width .4s;
+    }
+    .prog-fill.warn   { background: var(--yellow); }
+    .prog-fill.danger { background: var(--red); }
+
+    /* Inactive placeholder */
+    .inactive-placeholder {
+      text-align: center;
+      padding: 30px 16px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .inactive-placeholder .big { font-size: 38px; margin-bottom: 8px; }
+
+    /* ── Winner Banner ───────────────────────── */
+    .winner-banner {
+      background: linear-gradient(135deg, #052e1b, #071e10);
+      border: 1px solid var(--green);
+      border-radius: var(--radius);
+      padding: 22px 20px;
+      text-align: center;
+      margin-bottom: 18px;
+    }
+    .winner-banner h2 { color: var(--green); font-size: 24px; margin-bottom: 6px; }
+    .winner-banner p  { color: var(--text2); font-size: 13px; }
+    .winner-addr {
+      font-family: monospace;
+      background: var(--bg);
+      padding: 5px 12px;
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 12px;
+      display: inline-block;
+      margin-top: 8px;
+    }
+
+    /* ── Activity Feed ───────────────────────── */
+    .activity-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .activity-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      user-select: none;
+    }
+    .activity-hdr:hover { background: var(--surface2); }
+    .activity-hdr-left { display: flex; align-items: center; gap: 8px; }
+    .act-count {
+      background: var(--accent);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 7px;
+      border-radius: 20px;
+      line-height: 1.5;
+    }
+    .act-toggle { color: var(--muted); font-size: 11px; transition: transform .2s; }
+    .act-toggle.open { transform: rotate(180deg); }
+
+    .activity-body { display: none; }
+    .activity-body.open { display: block; }
+
+    .act-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 18px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .act-item:last-child { border-bottom: none; }
+    .act-ico  { font-size: 15px; flex-shrink: 0; width: 22px; text-align: center; margin-top: 1px; }
+    .act-msg  { flex: 1; color: var(--text2); line-height: 1.4; }
+    .act-msg strong { color: var(--text); }
+    .act-time { color: var(--muted); font-size: 11px; white-space: nowrap; margin-top: 1px; }
+
+    .act-empty {
+      padding: 22px 18px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* ── Owner Panel ─────────────────────────── */
+    .owner-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .owner-hdr {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .owner-chip-hdr {
+      font-size: 11px;
+      background: #1a1130;
+      color: var(--accent2);
+      border: 1px solid var(--accent2);
+      padding: 2px 9px;
+      border-radius: 20px;
+    }
+    .form-row { display: flex; gap: 12px; }
+    .form-row .fg { flex: 1; }
+    .fg { margin-bottom: 14px; }
+    .fg label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
+    .fg input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 12px;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      transition: border-color .15s;
+    }
+    .fg input:focus { border-color: var(--accent); }
+    .form-hint { font-size: 11px; color: var(--muted); margin-top: 8px; }
+
+    /* ── Footer bar ──────────────────────────── */
+    .footer-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      padding: 10px 0 4px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .footer-bar code { font-family: monospace; color: var(--text2); font-size: 11px; }
+    .footer-bar a { color: var(--accent); text-decoration: none; }
+    .footer-bar a:hover { text-decoration: underline; }
+
+    /* ── Modals ──────────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.72);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000;
+      padding: 16px;
+    }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      width: 100%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-title { font-size: 20px; font-weight: 700; margin-bottom: 20px; }
+
+    /* How to Play steps */
+    .htp-step { display: flex; gap: 14px; margin-bottom: 18px; }
+    .htp-num {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+      font-size: 13px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .htp-body h4 { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+    .htp-body p  { font-size: 13px; color: var(--text2); line-height: 1.5; }
+
+    /* Dev modal account rows */
+    .acct-row {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 14px; margin-bottom: 8px;
+      cursor: pointer; transition: border-color .15s;
+    }
+    .acct-row:hover { border-color: var(--accent); }
+    .acct-role { font-size: 11px; font-weight: 700; color: var(--accent2); width: 55px; }
+    .acct-addr { font-family: monospace; font-size: 12px; flex: 1; }
+    .acct-bal  { font-size: 12px; color: var(--green); }
+
+    /* ── Dashboard (landing page) ────────────── */
+    .dashboard { margin-bottom: 36px; }
+
+    /* Live game card */
+    .dash-live {
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      margin-bottom: 14px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      text-align: left;
+    }
+    .dash-live.active {
+      background: linear-gradient(140deg, #061e12 0%, #0d2818 100%);
+      border-color: rgba(52, 211, 153, .45);
+      box-shadow: 0 0 28px rgba(52, 211, 153, .07);
+    }
+    .dl-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .dl-status {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1px;
+      color: var(--muted);
+    }
+    .dl-status.live { color: var(--green); }
+    .dl-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+    .dl-status.live .dl-dot {
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+      animation: pulse 2s infinite;
+    }
+    .dl-timer { font-size: 13px; color: var(--text2); }
+    .dl-pot {
+      font-size: 36px; font-weight: 800; letter-spacing: -1.5px;
+      color: var(--green); line-height: 1; margin-bottom: 3px;
+    }
+    .dl-pot-label {
+      font-size: 11px; color: var(--muted); margin-bottom: 14px;
+      text-transform: uppercase; letter-spacing: .5px;
+    }
+    .dl-hint {
+      background: rgba(0,0,0,.25);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-style: italic;
+      color: var(--accent2);
+      font-size: 14px;
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+    .dl-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 12px; color: var(--muted);
+    }
+    .dl-no-game { color: var(--muted); font-size: 13px; }
+
+    /* Dashboard 2-col grid */
+    .dash-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .dash-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      text-align: left;
+    }
+    .dash-card-title {
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1px;
+      color: var(--muted); margin-bottom: 12px;
+    }
+
+    /* Winner rows */
+    .winner-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 0; border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .winner-row:last-child { border-bottom: none; }
+    .w-rank { font-size: 14px; width: 20px; flex-shrink: 0; }
+    .w-addr { font-family: monospace; color: var(--text); flex: 1; font-size: 12px; }
+    .w-amt  { color: var(--green); font-weight: 700; font-size: 12px; white-space: nowrap; }
+    .w-time { color: var(--muted); font-size: 11px; white-space: nowrap; }
+
+    /* Stat lines */
+    .stat-line {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px;
+    }
+    .stat-line:last-child { border-bottom: none; }
+    .sl-lbl { color: var(--text2); }
+    .sl-val { font-weight: 700; color: var(--text); }
+    .sl-val.green { color: var(--green); }
+
+    /* Loading / empty */
+    .dash-loading {
+      display: flex; align-items: center; justify-content: center;
+      gap: 8px; padding: 18px 0; color: var(--muted); font-size: 13px;
+    }
+    .dash-spin {
+      width: 14px; height: 14px;
+      border: 2px solid var(--border); border-top-color: var(--muted);
+      border-radius: 50%; animation: spin .7s linear infinite;
+    }
+    .dash-empty {
+      text-align: center; color: var(--muted); font-size: 13px; padding: 20px 0;
+    }
+    .dash-empty .de-ico { font-size: 26px; margin-bottom: 6px; }
+
+    .dash-divider {
+      border: none; border-top: 1px solid var(--border); margin: 28px 0 24px;
+    }
+
+    /* ── Responsive ──────────────────────────── */
+    @media (max-width: 640px) {
+      .game-grid { grid-template-columns: 1fr; }
+      .form-row  { flex-direction: column; gap: 0; }
+      .dash-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 480px) {
+      header { padding: 10px 14px; }
+      main   { padding: 16px 12px; }
+      .hero-title { font-size: 28px; }
+      .sb-meta { gap: 8px; }
+      .dl-pot { font-size: 28px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ─── Header ───────────────────────────────────────── -->
+<header>
+  <a href="#" class="logo">
+    <span class="logo-mark">B</span>
+    <span class="logo-text">Bel<span>ly</span></span>
+  </a>
+
+  <div class="header-right">
+    <button class="btn-ghost btn-sm" onclick="showHowToPlay()">? How to Play</button>
+    <a href="docs.html" target="_blank" style="text-decoration:none;">
+      <button class="btn-ghost btn-sm">📄 Docs</button>
+    </a>
+
+    <div class="net-pill" id="net-pill">
+      <span class="net-dot"></span>
+      <span id="net-name">No wallet</span>
+    </div>
+
+    <div class="wallet-pill" id="wallet-pill" style="display:none;">
+      <span id="wallet-addr-display">—</span>
+      <span class="owner-chip" id="owner-chip" style="display:none;">owner</span>
+    </div>
+
+    <div id="header-connect-btns" style="display:flex; gap:6px;">
+      <button class="btn-ghost btn-sm" id="hdr-kasware" onclick="connectWallet('kasware')">KasWare</button>
+      <button class="btn-ghost btn-sm" id="hdr-metamask" onclick="connectWallet('metamask')">MetaMask</button>
+    </div>
+
+    <button class="btn-ghost btn-sm" id="btn-disconnect" style="display:none;" onclick="disconnect()">Disconnect</button>
+  </div>
+</header>
+
+<!-- ─── Toast Container ──────────────────────────────── -->
+<div id="toasts"></div>
+
+<!-- ─── Main ─────────────────────────────────────────── -->
+<main>
+
+  <!-- ── Not Connected ──────────────────────────────── -->
+  <div id="not-connected">
+    <div class="hero-badge">On-chain word challenge</div>
+    <div class="hero-title">Bel<span>ly</span></div>
+    <p class="hero-sub">Feed your intuition, crack the secret word, and claim the prize pool on IGRA Network.</p>
+    <p class="hero-cta">Connect a wallet below to start playing.</p>
+
+    <div class="wallet-options">
+      <!-- KasWare -->
+      <div class="wallet-card kasware" id="card-kasware" onclick="connectWallet('kasware')">
+        <img src="https://www.kasware.xyz/favicon.ico" width="44" height="44"
+          onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 44 44%22><rect width=%2244%22 height=%2244%22 rx=%2210%22 fill=%22%2370e000%22/><text x=%2250%25%22 y=%2258%25%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2222%22 font-weight=%22bold%22>K</text></svg>'" />
+        <div class="wc-name">KasWare</div>
+        <div class="wc-sub" id="kasware-status">Detecting…</div>
+      </div>
+
+      <!-- MetaMask -->
+      <div class="wallet-card" id="card-metamask" onclick="connectWallet('metamask')">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" width="44" height="44"
+          onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 44 44%22><rect width=%2244%22 height=%2244%22 rx=%2210%22 fill=%22%23e2761b%22/><text x=%2250%25%22 y=%2258%25%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22 font-weight=%22bold%22>MM</text></svg>'" />
+        <div class="wc-name">MetaMask</div>
+        <div class="wc-sub" id="metamask-status">Detecting…</div>
+      </div>
+
+      <!-- Dev Mode -->
+      <div class="wallet-card devmode" onclick="showDevModal()">
+        <div style="font-size:40px; margin-bottom:8px; line-height:1.1;">🔧</div>
+        <div class="wc-name">Dev Mode</div>
+        <div class="wc-sub">Hardhat accounts</div>
+      </div>
+    </div>
+
+    <details class="setup-guide">
+      <summary>First time? Setup guide</summary>
+      <div style="margin-top:12px;">
+        <div class="step-lbl">Install &amp; deploy</div>
+        <code>npm install</code>
+        <code>npx hardhat node</code>
+        <code>npm run deploy</code>
+        <div class="step-lbl">Serve the frontend</div>
+        <code>npm run serve</code>
+        <div style="font-size:12px; color:var(--text2); margin-top:10px;">
+          Open <strong>http://localhost:3000</strong> and select Dev Mode to connect.
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <!-- ── Connected Panels ────────────────────────────── -->
+  <div id="panels" style="display:none;">
+
+    <!-- Winner Banner (shown when game ends) -->
+    <div id="winner-section" class="winner-banner" style="display:none;">
+      <h2>🏆 We have a winner!</h2>
+      <p>The secret word was guessed correctly by</p>
+      <div class="winner-addr" id="winner-addr">—</div>
+    </div>
+
+    <!-- Status Banner -->
+    <div class="status-banner sb-inactive" id="status-banner">
+      <div class="sb-left">
+        <div class="sb-dot"></div>
+        <div class="sb-title" id="sb-title">No Active Game</div>
+      </div>
+      <div class="sb-meta" id="sb-meta"></div>
+    </div>
+
+    <!-- Game Grid -->
+    <div class="game-grid">
+
+      <!-- LEFT: Game Info -->
+      <div class="card">
+        <div class="card-lbl">Current Game</div>
+
+        <div class="hint-box empty" id="hint-box">Waiting for a game to start…</div>
+
+        <div class="stats-grid">
+          <div class="stat-box">
+            <div class="stat-lbl">Prize Pool</div>
+            <div class="stat-val green" id="pot-balance">0 iKAS</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-lbl">Time Left</div>
+            <div class="stat-val yellow" id="time-remaining">—</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-lbl">Total Guesses</div>
+            <div class="stat-val" id="guess-count">0</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-lbl">My Guesses</div>
+            <div class="stat-val" id="my-guesses">0 / 20</div>
+          </div>
+        </div>
+
+        <!-- Session guess history -->
+        <div id="session-history" style="display:none;">
+          <div class="card-lbl" style="margin-bottom:8px;">My Guesses This Session</div>
+          <div class="guess-tags" id="guess-tags"></div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Play -->
+      <div class="card">
+        <div class="card-lbl">Make a Guess</div>
+
+        <!-- Active game: guess input -->
+        <div id="guess-panel">
+          <div class="guess-row">
+            <input
+              type="text"
+              id="input-guess"
+              placeholder="Type your guess…"
+              autocomplete="off"
+              maxlength="64"
+            />
+            <button class="btn-success" id="btn-guess" onclick="submitGuess()">
+              <span id="btn-guess-label">Guess →</span>
+            </button>
+          </div>
+
+          <div class="guess-meta-row">
+            <span>💰 10 iKAS per guess</span>
+            <span id="char-hint" style="display:none; margin-left:auto;"></span>
+          </div>
+
+          <!-- Cooldown bar -->
+          <div class="cooldown-box" id="cooldown-wrap" style="display:none;">
+            <div class="cd-row">
+              <span>⏱ Cooling down…</span>
+              <span id="cd-text">10s</span>
+            </div>
+            <div class="cd-track">
+              <div class="cd-fill" id="cd-bar" style="width:100%;"></div>
+            </div>
+          </div>
+
+          <!-- Guess progress -->
+          <div class="prog-wrap" id="guess-prog">
+            <div class="prog-lbl">
+              <span>Guesses used this game</span>
+              <span id="prog-text">0 / 20</span>
+            </div>
+            <div class="prog-track">
+              <div class="prog-fill" id="prog-fill" style="width:0%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Inactive placeholder -->
+        <div id="game-inactive-msg" class="inactive-placeholder" style="display:none;">
+          <div class="big">⏳</div>
+          Waiting for the owner to start a new game…
+        </div>
+      </div>
+
+    </div><!-- /game-grid -->
+
+    <!-- Activity Feed -->
+    <div class="activity-section">
+      <div class="activity-hdr" onclick="toggleActivity()">
+        <div class="activity-hdr-left">
+          <span style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--muted);">Recent Activity</span>
+          <span class="act-count" id="act-count" style="display:none;">0</span>
+        </div>
+        <span class="act-toggle open" id="act-toggle">▼</span>
+      </div>
+      <div class="activity-body open" id="activity-body">
+        <div class="act-empty">No activity yet.</div>
+      </div>
+    </div>
+
+    <!-- Owner Panel -->
+    <div class="owner-section" id="owner-panel" style="display:none;">
+      <div class="owner-hdr">
+        <div class="card-lbl" style="margin-bottom:0;">Owner Controls</div>
+        <span class="owner-chip-hdr">You are the owner</span>
+      </div>
+
+      <div id="start-game-form">
+        <div class="form-row">
+          <div class="fg">
+            <label for="input-secret">Secret Word</label>
+            <input type="text" id="input-secret" placeholder="e.g. blockchain" autocomplete="off" />
+          </div>
+          <div class="fg">
+            <label for="input-hint">Hint (shown to players)</label>
+            <input type="text" id="input-hint" placeholder="e.g. A distributed ledger technology" />
+          </div>
+        </div>
+        <button class="btn-primary" id="btn-start" onclick="startGame()">
+          <span id="btn-start-label">▶ Start Game</span>
+        </button>
+        <p class="form-hint">The secret word is hashed in your browser — it is never sent to the blockchain in plaintext.</p>
+      </div>
+
+      <div id="reset-game-form" style="display:none; margin-top:16px; padding-top:16px; border-top:1px solid var(--border);">
+        <p style="font-size:13px; color:var(--text2); margin-bottom:10px;">
+          ⌛ Game has timed out. You can reclaim the prize pot and start fresh.
+        </p>
+        <button class="btn-danger btn-sm" id="btn-reset" onclick="resetTimedOut()">Reclaim Pot &amp; Reset</button>
+      </div>
+    </div>
+
+    <!-- Footer Info Bar -->
+    <div class="footer-bar">
+      <span>Contract: <code id="contract-addr-footer">—</code></span>
+      <button class="btn-ghost btn-sm" onclick="copyContractAddress()" style="font-size:11px; padding:3px 9px;">Copy</button>
+      <span>·</span>
+      <span>Balance: <strong id="my-balance">—</strong></span>
+      <span>·</span>
+      <a href="docs.html" target="_blank">Developer Docs →</a>
+    </div>
+
+  </div><!-- /panels -->
+
+</main>
+
+<!-- ─── How to Play Modal ─────────────────────────── -->
+<div id="htp-modal" class="modal-overlay" style="display:none;" onclick="closeHowToPlay(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">How to Play 🎮</div>
+
+    <div class="htp-step">
+      <div class="htp-num">1</div>
+      <div class="htp-body">
+        <h4>Connect your wallet</h4>
+        <p>Use KasWare (recommended for IGRA Network) or MetaMask. For local testing, use Dev Mode.</p>
+      </div>
+    </div>
+    <div class="htp-step">
+      <div class="htp-num">2</div>
+      <div class="htp-body">
+        <h4>Read the hint</h4>
+        <p>The game owner sets a secret word and provides a public hint. Use it to figure out the word.</p>
+      </div>
+    </div>
+    <div class="htp-step">
+      <div class="htp-num">3</div>
+      <div class="htp-body">
+        <h4>Submit a guess</h4>
+        <p>Type a single word and pay <strong>10 iKAS</strong>. Your guess is verified on-chain — the plaintext is never stored on the blockchain.</p>
+      </div>
+    </div>
+    <div class="htp-step">
+      <div class="htp-num">4</div>
+      <div class="htp-body">
+        <h4>Cooldown between guesses</h4>
+        <p>Wait <strong>10 seconds</strong> between each guess. You can submit up to <strong>20 guesses</strong> per game.</p>
+      </div>
+    </div>
+    <div class="htp-step">
+      <div class="htp-num">5</div>
+      <div class="htp-body">
+        <h4>Win the prize pool</h4>
+        <p>The first player to guess correctly wins <strong>95%</strong> of the accumulated prize pool. The remaining 5% is the operator fee.</p>
+      </div>
+    </div>
+
+    <div style="background:var(--bg); border-radius:8px; padding:12px 14px; font-size:12px; color:var(--text2); margin-top:4px;">
+      ⚠️ If no one wins within <strong>1 day</strong>, the game resets and the pot is returned to the operator.
+    </div>
+
+    <button class="btn-primary" style="margin-top:18px; width:100%;" onclick="closeHowToPlay()">Got it!</button>
+  </div>
+</div>
+
+<!-- ─── Dev Mode Modal ──────────────────────────────── -->
+<div id="dev-modal" class="modal-overlay" style="display:none;" onclick="hideDevModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">Dev Mode 🔧</div>
+    <p style="color:var(--text2); font-size:13px; margin-bottom:18px;">
+      Local Hardhat test accounts — no wallet extension required.
+    </p>
+
+    <div class="acct-row" onclick="connectDev('0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80')">
+      <span class="acct-role">Owner</span>
+      <span class="acct-addr">0xf39F…2266</span>
+      <span class="acct-bal">10,000 ETH</span>
+    </div>
+    <div class="acct-row" onclick="connectDev('0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d')">
+      <span class="acct-role">Player 1</span>
+      <span class="acct-addr">0x7099…79C8</span>
+      <span class="acct-bal">10,000 ETH</span>
+    </div>
+    <div class="acct-row" onclick="connectDev('0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a')">
+      <span class="acct-role">Player 2</span>
+      <span class="acct-addr">0x3C44…93BC</span>
+      <span class="acct-bal">10,000 ETH</span>
+    </div>
+
+    <div style="margin-top:16px; padding-top:14px; border-top:1px solid var(--border);">
+      <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:6px;">Or paste any private key:</label>
+      <div style="display:flex; gap:8px;">
+        <input type="password" id="custom-pk" placeholder="0x…"
+          style="flex:1; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:var(--text); font-size:13px; outline:none;" />
+        <button class="btn-primary" onclick="connectDev(document.getElementById('custom-pk').value)">Connect</button>
+      </div>
+    </div>
+
+    <button class="btn-ghost btn-sm" style="margin-top:14px; width:100%;" onclick="hideDevModal()">Cancel</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

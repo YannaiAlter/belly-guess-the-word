@@ -1,0 +1,21 @@
+{
+  "name": "belly",
+  "version": "1.1.0",
+  "description": "Belly — on-chain word game on IGRA Network (Kaspa EVM L2)",
+  "scripts": {
+    "node": "hardhat node",
+    "compile": "hardhat compile",
+    "deploy": "hardhat run scripts/deploy.js --network localhost",
+    "deploy:igra": "hardhat run scripts/deploy.js --network igra",
+    "serve": "serve frontend -p 3000",
+    "serve:production": "npm run deploy:igra && serve frontend -p 3000",
+    "test": "hardhat test",
+    "test:gas": "REPORT_GAS=true hardhat test"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "dotenv": "^17.4.1",
+    "hardhat": "^2.22.0",
+    "serve": "^14.2.0"
+  }
+}
